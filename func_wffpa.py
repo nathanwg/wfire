@@ -517,6 +517,8 @@ def get_flametimeline(sets,data):
             return
         for j in range(0,len(tests)):
             test = data[int(tests[j])-1]
+            med_data = np.array(())
+            vals  = 0
             cwd = os.getcwd()
             pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
             if os.path.exists(pfilepath) is False:
@@ -541,6 +543,8 @@ def get_flametimeline(sets,data):
             timeline = np.zeros((num_points,frame_span))
             x_time = np.linspace(0,frame_span,frame_span)/frame_span
             save_filepath = cwd+'\\plots_timeline\\'+test.filename.replace('.tif','')+'_timeline.png'
+            prac_filepath = cwd+'\\'+test.filename.replace('.tif','')+'_timeline.txt'
+            # prac_file = open(prac_filepath,'x')
             for jjj in range(num_points):
                 if jjj <= num_points/2:
                     color = 'k'
@@ -548,21 +552,36 @@ def get_flametimeline(sets,data):
                 else:
                     color = 'b'
                     level = -1
-##                for k in range(ignition_frame,eof):
                 for k in range(frame_span):
                     frame = frames[k+ignition_frame].astype(float)
                     if frame[y_val[jjj],x_val[jjj]] > 35:
+                        if vals == 0:
+                            timeline[jjj,k] = level
+                            med_data = np.append(med_data,x_time[k])    
+                            vals+=1
+                            # prac_file.write(str(x_time[k])+'\n')
+                            continue
                         timeline[jjj,k] = level
-        ##            x_time = np.linspace(ignition_frame,eof,frame_span)
+                        arr = (med_data-x_time[k])==0
+                        isthere = np.any(arr)
+                        if isthere == False:
+                            med_data = np.append(med_data,x_time[k])
+                            # prac_file.write(str(x_time[k])+'\n')
+                            vals+=1
                 plt.plot(x_time,timeline[jjj,:].T,color)
-##            plt.show()
-            if os.path.exists(save_filepath):
-                print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-                print(pfilepath)
-                usr = input('Ok (press return)')
-                return
-            plt.savefig(save_filepath)
+            # prac_file.close()    
+            median = np.median(med_data)
+            mean = np.mean(med_data)
+            print(median,mean)
+            # plt.show()
+            # if os.path.exists(save_filepath):
+            #     print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
+            #     print(pfilepath)
+            #     usr = input('Ok (press return)')
+            #     return
+            # plt.savefig(save_filepath)
             plt.close()
+        input()
 
 def saveframes(sets,data):
     for i in range(0,len(sets),2):
