@@ -1,1 +1,6 @@
-E:\Python Data Structure\wfire/
+*.pyc
+cache_wffpa.txt
+frames/
+cache_plot_settings.txt
+prac.py
+run_prac.py
