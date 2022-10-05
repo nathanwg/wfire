@@ -1,3 +1,4 @@
+from cgi import test
 from func_wfipa import readfile, get_image_properties
 import func_wffpa as wf
 import func_run as rn
@@ -130,6 +131,7 @@ def run_createplots(sets,data,distance,ylim):
     print(' Plot flame timelines ----------- t')
     print(' Plot ignition times ------------ i')
     print(' Plot avgerage light intensity -- a')
+    print(' Plot timeline medians ---------- m')
     usr = input('Selected option: ')
     if usr == 'p':
         run_plotprofiles(sets,data,distance,ylim)
@@ -146,6 +148,8 @@ def run_createplots(sets,data,distance,ylim):
         else:
             return
         wf.calc_avgint(sets,data,threshold)
+    elif usr == 'm':
+        run_plotmedians(sets,data)
     else:
         input('Error (hit \'Enter\' to continue)')
         return
@@ -181,6 +185,23 @@ def run_plotigtime(sets,data):
     print(' Condition:',set_condition)
     input()
     return
+
+def run_plotmedians(sets,data):
+    medians_sets = []
+    for i in range(0,len(sets),2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+
+        medians = np.array(())
+        for j in range(0,len(tests)):
+            test = data[int(tests[j])-1]
+            median_test = wf.get_median(test)
+            medians = np.append(medians,median_test)
+        medians_sets.append(medians)
+    wf.plotmedians(sets,data,medians_sets)
+
+        
 
 ##def run_creategrids(sets,data):
 ##    os.system('cls')

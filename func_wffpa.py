@@ -119,7 +119,7 @@ def get_heatmaps(testnums,data,findaverage,save,thresh):
     """
     norm = 0
     norm = bool(norm)
-    heat_maps = [];
+    heat_maps = []
     counter = 0
     for i in testnums:
         test = data[int(i)-1]
@@ -517,8 +517,6 @@ def get_flametimeline(sets,data):
             return
         for j in range(0,len(tests)):
             test = data[int(tests[j])-1]
-            med_data = np.array(())
-            vals  = 0
             cwd = os.getcwd()
             pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
             if os.path.exists(pfilepath) is False:
@@ -543,8 +541,8 @@ def get_flametimeline(sets,data):
             timeline = np.zeros((num_points,frame_span))
             x_time = np.linspace(0,frame_span,frame_span)/frame_span
             save_filepath = cwd+'\\plots_timeline\\'+test.filename.replace('.tif','')+'_timeline.png'
-            prac_filepath = cwd+'\\'+test.filename.replace('.tif','')+'_timeline.txt'
-            # prac_file = open(prac_filepath,'x')
+            tfilepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
+            tfile = open(tfilepath,'x')
             for jjj in range(num_points):
                 if jjj <= num_points/2:
                     color = 'k'
@@ -555,24 +553,11 @@ def get_flametimeline(sets,data):
                 for k in range(frame_span):
                     frame = frames[k+ignition_frame].astype(float)
                     if frame[y_val[jjj],x_val[jjj]] > 35:
-                        if vals == 0:
-                            timeline[jjj,k] = level
-                            med_data = np.append(med_data,x_time[k])    
-                            vals+=1
-                            # prac_file.write(str(x_time[k])+'\n')
-                            continue
                         timeline[jjj,k] = level
-                        arr = (med_data-x_time[k])==0
-                        isthere = np.any(arr)
-                        if isthere == False:
-                            med_data = np.append(med_data,x_time[k])
-                            # prac_file.write(str(x_time[k])+'\n')
-                            vals+=1
+                        save_val = level*x_time[k]
+                        tfile.write(str(save_val)+'\n')
                 plt.plot(x_time,timeline[jjj,:].T,color)
-            # prac_file.close()    
-            median = np.median(med_data)
-            mean = np.mean(med_data)
-            print(median,mean)
+            tfile.close()    
             # plt.show()
             # if os.path.exists(save_filepath):
             #     print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
@@ -581,7 +566,6 @@ def get_flametimeline(sets,data):
             #     return
             # plt.savefig(save_filepath)
             plt.close()
-        input()
 
 def saveframes(sets,data):
     for i in range(0,len(sets),2):
@@ -594,7 +578,7 @@ def saveframes(sets,data):
             file = os.getcwd().replace('wfire','') + test.filename
             img,filename = readfile(file,True)
             frames,num_frames,num_rows,num_cols = get_image_properties(img)
-            sfilepath = os.getcwd()+'\\frames\\test_frames.npy'
+            sfilepath = os.getcwd()+'\\frames\\'+test.filename.replace('.tif','')+'_franes.npy'
             np.save(sfilepath,frames)
 
             
@@ -756,3 +740,43 @@ def creategrids(sets,data):
     return
                 
                 
+def get_median(test):
+    cwd = os.getcwd()
+    filepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
+    data = np.loadtxt(filepath,unpack=True)
+    data = np.abs(data)
+    med_data = np.array(())
+    vals = 0
+    for i in range(0,len(data)):
+        if vals == 0:
+            med_data = np.append(med_data,data[i])
+            vals+=1
+        elif vals != 0:
+            arr = (med_data-data[i])==0
+            isthere = np.any(arr)
+            if isthere==False:
+                med_data = np.append(med_data,data[i])
+                vals+=1
+        else:
+            continue
+    median = np.median(med_data)
+    return median
+
+def plotmedians(sets,data,medians_sets):
+    labels = []
+    temperatures = []
+    for i in range(0,len(sets),2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+        temperature = int(data[int(tests[0])-1].set_type[3])
+        temp_label = 'avg T = '+str(temperature)+' C'
+        labels.append(temp_label)
+        temperatures.append(temperature)
+        
+    median_averages = []
+    for i in medians_sets:
+        median_averages.append(np.mean(i))
+    plt.plot(temperatures,median_averages,'ko')
+    plt.show()
+    return
