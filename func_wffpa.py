@@ -1,3 +1,4 @@
+from tkinter import E
 import numpy as np
 import os
 from classes import Test
@@ -765,18 +766,27 @@ def get_median(test):
 def plotmedians(sets,data,medians_sets):
     labels = []
     temperatures = []
+    fmc = []
     for i in range(0,len(sets),2):
         start = int(sets[i])
         stop = int(sets[i+1])
         tests = np.linspace(start,stop,stop-start+1)
-        temperature = int(data[int(tests[0])-1].set_type[3])
+        test = data[int(tests[0])-1]
+        temperature = int(test.set_type[3])
         temp_label = 'avg T = '+str(temperature)+' C'
         labels.append(temp_label)
         temperatures.append(temperature)
+        fmc.append(test.fmc)
         
     median_averages = []
-    for i in medians_sets:
-        median_averages.append(np.mean(i))
-    plt.plot(temperatures,median_averages,'ko')
+    for i in range(len(medians_sets)):
+        if fmc[i] == 0:
+            linestyle = 'ko'
+        else:
+            linestyle = 'go'            
+        median_averages.append(np.mean(medians_sets[i]))
+        plt.plot(temperatures[i],median_averages[i],linestyle)
+    # plt.get_current_fig_manager().window.state('zoomed')
+    plt.get_current_fig_manager().window.showMaximized()
     plt.show()
     return
