@@ -790,3 +790,6 @@ def plotmedians(sets,data,medians_sets):
     plt.get_current_fig_manager().window.showMaximized()
     plt.show()
     return
+
+def get_maxarea(sets,data):
+    input('Not operational')

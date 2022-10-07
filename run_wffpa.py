@@ -201,20 +201,63 @@ def run_plotmedians(sets,data):
         medians_sets.append(medians)
     wf.plotmedians(sets,data,medians_sets)
 
-        
+def run_tools(sets,data):
+    running,error = True, False
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Type option from the following list and hit enter:')
+        print(' Heatmaps ------------ h','\n','Select points ------- s')
+        print(' Go back ------------- b')
+        print(' The following test numbers are being considered:')
+        for i in range(0,len(sets),2):
+            print(round(sets[i]),'-',round(sets[i+1]))
+        print()
+        if error is True:
+            print('Error -- selected invalid option')
+            error = False
+            print()
+        usr_func = input('Selected option: ')
+        if usr_func == 'h':
+            heat_maps = run_heatmap(sets,data)
+        elif usr_func == 's':
+            run_selectpoints(sets,data)
+        elif usr_func == 'b':
+            return
+        else:
+            error = True
+    return
 
-##def run_creategrids(sets,data):
-##    os.system('cls')
-##    print(' Would you like to continue? Grids will be made for the following tests:')
-##    for i in range(0,len(sets),2):
-##        print(round(sets[i]),'-',round(sets[i+1]))
-##    usr = input('y/n/b: ')
-##    if usr == 'y':
-##        wf.creategrids(sets,data)
-##    else:
-##        return
-##    return
-
+def run_validate(sets,data,distance):
+    running,error = True, False
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Type option from the following list and hit enter:')
+        print(' Show line position -- n')
+        print(' Show ignition ------- i')
+        print(' Check grids --------- g')
+        print(' Go back ------------- b')
+        print(' The following test numbers are being considered:')
+        for i in range(0,len(sets),2):
+            print(round(sets[i]),'-',round(sets[i+1]))
+        print()
+        if error is True:
+            print('Error -- selected invalid option')
+            error = False
+            print()
+        usr_func = input('Selected option: ')
+        if usr_func == 'n':
+            run_linedisplay(sets,data,distance)
+        elif usr_func == 'i':
+            run_showignition(sets,data)
+        elif usr_func == 'g':
+            wf.creategrids(sets,data)
+        elif usr_func == 'b':
+            return
+        else:
+            error = True
+    return
 #-------------------------------------------------------------------------------------#
 #-------------------------------------------------------------------------------------#
 def main():
@@ -229,47 +272,48 @@ def main():
     running,error = True, False
     while running is True:
         os.system('cls')
-        print('\n\n\n\n\n','--------------------------------------------------','\n')
-        print('Type option from the following list and hit enter:')
-        print(' Heatmaps ------------ h','\n','Select points ------- s')
-        print(' Show line position -- n')
-        print(' Change parameters --- c','\n','Show ignition ------- i')
-        print(' Create plots -------- p')
-        print(' Check grids --------- g')
-        print(' Save frames --------- f')
-        print(' Quit program -------- q','\n')
+        print('\n\n\n\n\n','--------------------------------------------------')
+        print('   ------------------Main Menu-------------------')
+        print(' --------------------------------------------------','\n')
+        print('Type option from the following list and hit enter:','\n')
+        #############################################-----
+        print('  Data Analysis Tools ------------ T')
+        print('  Create Analysis Plots ---------- P')
+        print('  Change Analysis Parameters ----- C')
+        print('  Data Analysis Validation ------- V')
+        print('  Quit Program ------------------- Q','\n')
+        #############################################-----
         print(' The following test numbers are being considered:')
+        sets_list = ''
         for i in range(0,len(sets),2):
-            print(round(sets[i]),'-',round(sets[i+1]))
-        print()
-        print(' Line currently being evaluated at ',distance[0],' cm\n')
-        print(' ylim for plot is set at: ',ylim,'\n')
+            if i == len(sets)-2:
+                sets_list = sets_list + str(round(sets[i]))+'-'+str(round(sets[i+1]))
+            else:    
+                sets_list = sets_list + str(round(sets[i]))+'-'+str(round(sets[i+1]))+', '
+        print('\n',sets_list,'\n')
+        # print()
+        # print(' Line currently being evaluated at ',distance[0],' cm\n')
+        # print(' ylim for plot is set at: ',ylim,'\n')
         if error is True:
             print('Error -- selected invalid option')
             error = False
             print()
-        usr_func = input('Selected option: ')
-        if usr_func == 'h':
-            heat_maps = run_heatmap(sets,data)
-        elif usr_func == 's':
-            run_selectpoints(sets,data)
-        elif usr_func == 'n':
-            run_linedisplay(sets,data,distance)
+        usr_func = input(' Selected option: ')
+        #############################################....
+        if usr_func == 't':
+            run_tools(sets,data)
+        elif usr_func == 'p':
+            run_createplots(sets,data,distance,ylim)
         elif usr_func == 'c':
             distance,sets,ylim = run_changeparameters(distance,sets,filename,ylim)
             ylim = float(ylim)
-        elif usr_func == 'i':
-            run_showignition(sets,data)
-        elif usr_func == 'p':
-            run_createplots(sets,data,distance,ylim)
-        elif usr_func == 'g':
-            wf.creategrids(sets,data)
-        elif usr_func == 'f':
-            wf.saveframes(sets,data)
+        elif usr_func == 'v':
+            run_validate(sets,data,distance)
         elif usr_func == 'q':
             running = False
         else:
             error = True
+        #############################################......
     return
             
             
