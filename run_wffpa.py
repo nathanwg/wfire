@@ -208,6 +208,7 @@ def run_tools(sets,data):
         print('\n\n\n\n\n','--------------------------------------------------','\n')
         print('Type option from the following list and hit enter:')
         print(' Heatmaps ------------ h','\n','Select points ------- s')
+        print(' Flame area ---------- a')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
         for i in range(0,len(sets),2):
@@ -222,6 +223,8 @@ def run_tools(sets,data):
             heat_maps = run_heatmap(sets,data)
         elif usr_func == 's':
             run_selectpoints(sets,data)
+        elif usr_func == 'a':
+            run_flamearea(sets,data)
         elif usr_func == 'b':
             return
         else:
@@ -258,6 +261,24 @@ def run_validate(sets,data,distance):
         else:
             error = True
     return
+
+def run_flamearea(sets,data):
+    running,error = True, False
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Type option from the following list and hit enter:')
+        print(' Get max flame area ---------------------- a')
+        print(' Get intensity data of max flame area ---- i')
+        print(' Go back --------------------------------- b')
+        usr_func = input('Selected option: ')
+        if usr_func == 'a':
+            wf.get_maxarea(sets,data)
+        elif usr_func == 'i':
+            wf.get_ima(sets,data)
+        elif usr_func == 'b':
+            return
+    return
 #-------------------------------------------------------------------------------------#
 #-------------------------------------------------------------------------------------#
 def main():
@@ -276,13 +297,11 @@ def main():
         print('   ------------------Main Menu-------------------')
         print(' --------------------------------------------------','\n')
         print('Type option from the following list and hit enter:','\n')
-        #############################################-----
         print('  Data Analysis Tools ------------ T')
         print('  Create Analysis Plots ---------- P')
         print('  Change Analysis Parameters ----- C')
         print('  Data Analysis Validation ------- V')
         print('  Quit Program ------------------- Q','\n')
-        #############################################-----
         print(' The following test numbers are being considered:')
         sets_list = ''
         for i in range(0,len(sets),2):
@@ -299,21 +318,19 @@ def main():
             error = False
             print()
         usr_func = input(' Selected option: ')
-        #############################################....
-        if usr_func == 't':
+        if usr_func == 't' or usr_func == 'T':
             run_tools(sets,data)
-        elif usr_func == 'p':
+        elif usr_func == 'p' or usr_func == 'P':
             run_createplots(sets,data,distance,ylim)
-        elif usr_func == 'c':
+        elif usr_func == 'c' or usr_func == 'C':
             distance,sets,ylim = run_changeparameters(distance,sets,filename,ylim)
             ylim = float(ylim)
-        elif usr_func == 'v':
+        elif usr_func == 'v' or usr_func == 'V':
             run_validate(sets,data,distance)
-        elif usr_func == 'q':
+        elif usr_func == 'q' or usr_func == 'Q':
             running = False
         else:
             error = True
-        #############################################......
     return
             
             

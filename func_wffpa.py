@@ -1,3 +1,5 @@
+from cgi import test
+from heapq import nsmallest
 from tkinter import E
 import numpy as np
 import os
@@ -64,8 +66,7 @@ def show_frames(frames,foi,eof):
         ax = plt.gca()
         ax.axes.xaxis.set_visible(False)
         ax.axes.yaxis.set_visible(False)
-##        plt.get_current_fig_manager().window.showMaximized()
-        plt.get_current_fig_manager().window.state('zoomed')
+        plt.get_current_fig_manager().window.showMaximized()
         plt.show()
 
     ignition_frame = int(foi)
@@ -105,15 +106,6 @@ def show_ignition(testnums,data):
         img = readfile(file,True)[0]
         frames = img[1]
         show_frames(frames,test.ignition_time[1],test.eof)
-##        usr = input('Save image, continue, or go back (s/c/b)')
-##        if usr == 's':
-##            continue
-##        elif usr == 'c':
-##            continue
-##        elif usr == 'b':
-##            return False
-##        else:
-##            continue
 
 def get_heatmaps(testnums,data,findaverage,save,thresh):
     """.....
@@ -180,19 +172,9 @@ def displaymaps(heat_maps,start,stop):
             ax = plt.gca()
             ax.axes.xaxis.set_visible(False)
             ax.axes.yaxis.set_visible(False)
-##            plt.get_current_fig_manager().window.showMaximized()
-##            clb.set_label('')
+            plt.get_current_fig_manager().window.showMaximized()
             plt.show()
     return True
-
-##        for i in tests:
-##        test = data[int(i)-1]
-##        pathname = test.filename.replace('.tif','')
-##        cwd = os.getcwd()
-##        path = cwd+'\\heatmaps\\'+pathname+'_heatmap.tiff'
-##        heatmap = readfile(path,False)[0]
-##        plt.imshow(heatmap,cmap='nipy_spectral_r')
-##        plt.show()
 
 def get_points(img,data,test_num,points_type):
     """....
@@ -221,7 +203,7 @@ def get_points(img,data,test_num,points_type):
     calib[0,0] = 4500
     img = np.concatenate((img,calib),axis=1)
     plt.imshow(img,cmap='nipy_spectral_r')
-    plt.get_current_fig_manager().window.state('zoomed')
+    plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
         p = refine_gridpoints(p)
@@ -261,7 +243,7 @@ def change_tests():
 def load_heatmaps(tests,data):
     """...
     """
-    heat_maps = [];
+    heat_maps = []
     for i in tests:
         test = data[int(i)-1]
         pathname = test.filename.replace('.tif','')
@@ -349,14 +331,6 @@ def display_linedisplay(h,coordinates):
     x_L = coordinates[1]
     dx = coordinates[2]
     num_cols = h.shape[1]
-##    for i in range(0,num_cols):
-##        x = round(x_L+i*dx)
-##        y = round(y_c)
-##        if y >= 256:
-##            y = 255
-##        if x>=256:
-##            x = 255
-##        h[y,x] = 4500
     for i in range(0,num_cols):
         y = round(y_c)
         if y >= 256:
@@ -567,21 +541,6 @@ def get_flametimeline(sets,data):
             #     return
             # plt.savefig(save_filepath)
             plt.close()
-
-def saveframes(sets,data):
-    for i in range(0,len(sets),2):
-        start = int(sets[i])
-        stop = int(sets[i+1])
-        tests = np.linspace(start,stop,stop-start+1)
-
-        for j in range(0,len(tests)):
-            test = data[int(tests[j])-1]
-            file = os.getcwd().replace('wfire','') + test.filename
-            img,filename = readfile(file,True)
-            frames,num_frames,num_rows,num_cols = get_image_properties(img)
-            sfilepath = os.getcwd()+'\\frames\\'+test.filename.replace('.tif','')+'_franes.npy'
-            np.save(sfilepath,frames)
-
             
 def calc_avgint(sets,data,threshold):
     """ Calculates the average light intensity (for pixels above threshold)
@@ -598,15 +557,7 @@ def calc_avgint(sets,data,threshold):
             img,filename = readfile(file,True)
             frames,num_frames,num_rows,num_cols = get_image_properties(img)
             avgint = np.zeros((num_frames,1))
-
-            cwd = os.getcwd()
-            pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-            if os.path.exists(pfilepath) is False:
-                print('---------------------------------------------------------\nNo points file exists for this test number\n',tests[j],'\n')
-                usr = input('Ok (press return)')
-                return
-            p = np.loadtxt(pfilepath)
-            x_left,x_right,y_bot,y_top = int(p[0]),int(p[1]+1),int(p[2]+1),int(p[3])
+            x_left,x_right,y_bot,y_top = load_gridpoints(test)
 
             #####---------------------
 ##            fig,ax=plt.subplots()
@@ -728,7 +679,7 @@ def creategrids(sets,data):
 ##            input()
             x_plot = np.linspace(x_left,x_right,100)
             plt.imshow(img,cmap='nipy_spectral_r')
-            plt.get_current_fig_manager().window.state('zoomed')
+            plt.get_current_fig_manager().window.showMaximized()
             for k in y_ticks:
                 y_plot = np.linspace(k,k,100)
                 plt.plot(x_plot,y_plot,'k')
@@ -786,10 +737,56 @@ def plotmedians(sets,data,medians_sets):
             linestyle = 'go'            
         median_averages.append(np.mean(medians_sets[i]))
         plt.plot(temperatures[i],median_averages[i],linestyle)
-    # plt.get_current_fig_manager().window.state('zoomed')
     plt.get_current_fig_manager().window.showMaximized()
     plt.show()
     return
 
-def get_maxarea(sets,data):
-    input('Not operational')
+def get_max_flame_area(sets,data):
+    nsets = len(sets)
+    for i in range(0,nsets,2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+        ntests = len(tests)
+
+        for j in range(ntests):
+            test = data[int(tests[j])-1]
+            x_left,x_right,y_bot,y_top = load_gridpoints(test)
+            file = os.getcwd().replace('wfire','') + test.filename
+            img,filename = readfile(file,True)
+            frames,num_frames,num_rows,num_cols = get_image_properties(img)
+            fmc = test.fmc
+            if fmc == 0:
+                threshold = 50
+            else:
+                threshold = 35
+
+            max_flame_area = 0
+            pixel_length = test.spatial
+            for k in range(num_frames):
+                ref_frame = frames[k]
+                ref_frame = ref_frame.astype(float) # Change to float to handle subtraction correctly
+                ref_frame[y_top:y_bot,x_left:x_right] = 0
+                if ref_frame.max() < threshold:
+                    continue
+                x_bool = ((ref_frame-threshold)>=0)
+                numpixels_frame = x_bool.sum()
+                pixel_area = pixel_length**2
+                flame_area = pixel_area*numpixels_frame
+                if flame_area > max_flame_area:
+                    max_flame_area = flame_area
+                
+
+def get_ima(sets,data):
+    input('get_ima -- Not operational')
+
+def load_gridpoints(test):
+    cwd = os.getcwd()
+    pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
+    if os.path.exists(pfilepath) is False:
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',tests[j],'\n')
+        usr = input('Ok (press return)')
+        return
+    p = np.loadtxt(pfilepath)
+    x_left,x_right,y_bot,y_top = int(p[0]),int(p[1]+1),int(p[2]+1),int(p[3])
+    return x_left,x_right,y_bot,y_top
