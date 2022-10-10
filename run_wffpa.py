@@ -279,6 +279,26 @@ def run_flamearea(sets,data):
         elif usr_func == 'b':
             return
     return
+
+def loop_handl(sets,data,tag,args):
+    nsets = len(sets)
+    for i in range(0,nsets,2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+        ntests = len(tests)
+
+        for j in range(ntests):
+            num = int(tests[j])-1
+            test = data[num]
+            func_switch(test,tag,args)
+
+def func_switch(test,tag,args):
+    if tag == 'ima':
+        wf.get_ima(test)
+    elif tag == 'area':
+        wf.get_max_flame_area(test)
+    elif tag == ''
 #-------------------------------------------------------------------------------------#
 #-------------------------------------------------------------------------------------#
 def main():
