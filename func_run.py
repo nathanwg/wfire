@@ -95,9 +95,9 @@ def run_linedisplay_c(sets,data,distance):
         if heat_maps is 0 or coordinates is 0:
             return
         k = 0
-        for i in heat_maps:
+        for j in heat_maps:
             usr = input('Continue (\'b\' to go back)')
             if usr == 'b':
                 return
-            wf.display_linedisplay(i,coordinates[k,:])
+            wf.display_linedisplay(j,coordinates[k,:])
             k+=1
