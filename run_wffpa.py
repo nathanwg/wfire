@@ -273,7 +273,7 @@ def run_flamearea(sets,data):
         print(' Go back --------------------------------- b')
         usr_func = input('Selected option: ')
         if usr_func == 'a':
-            wf.get_maxarea(sets,data)
+            wf.get_max_flame_area(sets,data)
         elif usr_func == 'i':
             wf.get_ima(sets,data)
         elif usr_func == 'b':

@@ -620,10 +620,10 @@ def calc_avgint(sets,data,threshold):
 ##            plt.pie(cat,labels=mylabels)
 ####            plt.show()
 ####            plt.close()
-            save_filepath = cwd+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
+            save_filepath = os.getcwd()+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
             if os.path.exists(save_filepath):
                 print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-                print(pfilepath)
+                print(save_filepath)
                 usr = input('Ok (press return)')
                 return
             plt.savefig(save_filepath)
@@ -784,9 +784,17 @@ def load_gridpoints(test):
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
     if os.path.exists(pfilepath) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',tests[j],'\n')
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnum,'\n')
         usr = input('Ok (press return)')
         return
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = int(p[0]),int(p[1]+1),int(p[2]+1),int(p[3])
     return x_left,x_right,y_bot,y_top
+
+def calc_uncertainty(arr,n):
+    if n != 10:
+        tval = input('What is the t-distribution value you are using?: ')
+    else:
+        tval = 2.262
+    unc = tval*np.std(arr)/np.sqrt(n)
+    return unc
