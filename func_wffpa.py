@@ -240,22 +240,18 @@ def change_tests():
         sets.append(int(m2))
     return sets
 
-def load_heatmaps(tests,data):
+def load_heatmap(test):
     """...
     """
-    heat_maps = []
-    for i in tests:
-        test = data[int(i)-1]
-        pathname = test.filename.replace('.tif','')
-        cwd = os.getcwd()
-        path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
-        if os.path.exists(path) is False:
-            print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',i,'\n')
-            usr = input('Ok (press return)')
-            return 0
-        heatmap = np.load(path)
-        heat_maps.append(heatmap)
-    return heat_maps
+    pathname = test.filename.replace('.tif','')
+    cwd = os.getcwd()
+    path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
+    if os.path.exists(path) is False:
+        print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',i,'\n')
+        usr = input('Ok (press return)')
+        return 0
+    heatmap = np.load(path)
+    return heatmap
 
 
 def save_points(test_num,data,p,points_type,num_points):
