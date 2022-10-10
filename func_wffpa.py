@@ -761,8 +761,9 @@ def get_max_flame_area(sets,data):
             else:
                 threshold = 35
 
-            max_flame_area = 0
-            pixel_length = test.spatial
+            max_flame_area,m_frame = 0,0
+            pixel_length = test.spatial_calibration
+            npf = 0
             for k in range(num_frames):
                 ref_frame = frames[k]
                 ref_frame = ref_frame.astype(float) # Change to float to handle subtraction correctly
@@ -772,13 +773,53 @@ def get_max_flame_area(sets,data):
                 x_bool = ((ref_frame-threshold)>=0)
                 numpixels_frame = x_bool.sum()
                 pixel_area = pixel_length**2
-                flame_area = pixel_area*numpixels_frame
+                flame_area = pixel_area*numpixels_frame*(1000**2)
                 if flame_area > max_flame_area:
                     max_flame_area = flame_area
+                    m_frame = ref_frame
+                    npf = numpixels_frame
+
+            # for k in range(num_cols):
+            #     for m in range(num_rows):
+            #         if m_frame[m,k] > threshold:
+            #             m_frame[m,k] = 255
+            print('Numpixels_frame: ',npf,'\n','Pixel_area: ',pixel_area)
+            print('Threshold: ',threshold)
+            print('Total area: ',round(max_flame_area),' mm^2')
+            # input()
+            mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+            np.save(mfilepath,m_frame)
+            # plt.imshow(m_frame)
+            # plt.show()
                 
 
 def get_ima(sets,data):
-    input('get_ima -- Not operational')
+    nsets = len(sets)
+    for i in range(0,nsets,2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+        ntests = len(tests)
+
+        for j in range(ntests):
+            test = data[int(tests[j])-1]
+            mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+            m_frame = np.load(mfilepath)
+            fmc = test.fmc
+            if fmc == 0:
+                threshold = 50
+            else:
+                threshold = 35
+            x_bool = ((m_frame-threshold)>=0)
+            numpixels_frame = x_bool.sum()
+            y_mod = np.multiply(m_frame,x_bool)
+            total = y_mod.sum()
+            averageint = total/numpixels_frame
+            print('Average intensity of maximmum flame area: ',averageint)
+            input()
+        
+            
+
 
 def load_gridpoints(test):
     cwd = os.getcwd()
