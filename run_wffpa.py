@@ -118,7 +118,7 @@ def run_flametimeline(sets,data):
         print(round(sets[i]),'-',round(sets[i+1]))
     usr = input('Would you like to continue? (y/n)')
     if usr == 'y':
-        wf.get_flametimeline(sets,data)
+        loop_handl(sets,data,'timeline',[])
     else:
         return
     return
@@ -273,9 +273,9 @@ def run_flamearea(sets,data):
         print(' Go back --------------------------------- b')
         usr_func = input('Selected option: ')
         if usr_func == 'a':
-            wf.get_max_flame_area(sets,data)
+            loop_handl(sets,data,'area',[])
         elif usr_func == 'i':
-            wf.get_ima(sets,data)
+            loop_handl(sets,data,'ima',[])
         elif usr_func == 'b':
             return
     return
@@ -298,7 +298,14 @@ def func_switch(test,tag,args):
         wf.get_ima(test)
     elif tag == 'area':
         wf.get_max_flame_area(test)
-    elif tag == ''
+    elif tag == 'grid':
+        wf.creategrids(test)
+    elif tag == 'avgint':
+        wf.calc_avgint(test,args)
+    elif tag == 'timeline':
+        wf.get_flametimeline(test)
+    else:
+        return
 #-------------------------------------------------------------------------------------#
 #-------------------------------------------------------------------------------------#
 def main():

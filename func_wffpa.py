@@ -1,6 +1,8 @@
 from cgi import test
 from heapq import nsmallest
+from json import load
 from tkinter import E
+from cv2 import threshold
 import numpy as np
 import os
 from classes import Test
@@ -247,7 +249,7 @@ def load_heatmap(test):
     cwd = os.getcwd()
     path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
     if os.path.exists(path) is False:
-        print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',i,'\n')
+        print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',test.testnumber,'\n')
         usr = input('Ok (press return)')
         return 0
     heatmap = np.load(path)
@@ -347,8 +349,6 @@ def change_linepar(distance):
         return distance
     distance[0] = int(input('What vertical distance would you like to set? (cm): '))
     distance[0] = distance[0] * dirc
-##    distance[1] = int(input('What distance to the left would you like to set? (cm): '))
-##    distance[2] = int(input('What distance to the right would you like to set? (cm): '))
     return distance
 
 def plotprofiles_h(sets,data,distance,isnorm,ylim):
@@ -357,23 +357,25 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
         start = int(sets[i])
         stop = int(sets[i+1])
         tests = np.linspace(start,stop,stop-start+1)
-        heat_maps = load_heatmaps(tests,data)
         temperature = int(data[int(tests[0])-1].set_type[3])
         temp_label = 'avg T = '+str(temperature)+' C'
         labels.append(temp_label)
         coordinates = get_line_coordinates(tests,data,distance)
         
-        if heat_maps is 0 or coordinates is 0:
+        if coordinates is 0:
             return
         L = coordinates[0,3]
         line_avg = 0
         line_avg_norm = 0
         labels = ['avg T = 460','avg T = 520','avg T = 610','avg T = 670','avg T = 880']
-        num_cols = heat_maps[0].shape[1]
         x_plot = np.linspace(0,9,num_cols)
-        num = len(heat_maps)
+        num = len(tests)
         for ii in range(0,num):
-            num_cols = heat_maps[0].shape[1]
+            test = data[int(tests[ii])-1]
+            heatmap = load_heatmap(test)
+            if heatmap is 0:
+                return
+            num_cols = heatmap.shape[1]
             line = np.zeros((1,num_cols))
             y_c,x_L,dx = coordinates[ii,0],coordinates[ii,1],coordinates[ii,2]
             check = False
@@ -388,17 +390,13 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
                         check = True
                     elif usr == 'n':
                         return
-                line[0,j] = heat_maps[ii][y,j]
+                line[0,j] = heatmap[y,j]
 
-            test = data[int(tests[ii])-1]
             eof = test.eof
             line_norm = line/(eof-test.ignition_time[1])
             line_avg += line
             line_avg_norm += line_norm
-##        print('Num: ',num)
-##        input('Continue....')
         line_avg /= num
-##        print('Line average',line_avg)
         line_avg_norm /= num
         if isnorm is True:
             plt.plot(x_plot,line_avg_norm.T,label=labels[int(i/2)])
@@ -421,22 +419,20 @@ def plotprofiles_v(sets,data,isnorm,xlim):
         start = int(sets[i])
         stop = int(sets[i+1])
         tests = np.linspace(start,stop,stop-start+1)
-        heat_maps = load_heatmaps(tests,data)
         temperature = int(data[int(tests[0])-1].set_type[3])
         temp_label = 'avg T = '+str(temperature)+' C'
         labels.append(temp_label)
-##        print(temperature)
-##        input('Correct temp?')
-        if heat_maps is 0:
-            return
-        num_rows = heat_maps[0].shape[0]
+
         line_avg = 0
         line_avg_norm = 0
-##        labels = ['avg T = 460','avg T = 520','avg T = 610','avg T = 670','avg T = 880']
         y_plot = np.linspace(0,9,num_rows)
-        num = len(heat_maps)
+        num = len(tests)
         for ii in range(0,num):
             test = data[int(tests[ii])-1]
+            heatmap = load_heatmap(test)
+            if heatmap is 0:
+                return
+            num_rows = heatmap.shape[0]
             pathname = test.filename.replace('.tif','')
             cwd = os.getcwd()
             path = cwd+'\\points_vert\\'+pathname+'_points_vert.txt'
@@ -449,15 +445,12 @@ def plotprofiles_v(sets,data,isnorm,xlim):
             line = np.zeros((1,num_rows))
             check = False
             for j in range(0,num_rows):
-                line[0,-1*j+num_rows-1] = heat_maps[ii][j,x]
+                line[0,-1*j+num_rows-1] = heatmap[j,x]
             eof = test.eof
             line_norm = line/(eof-test.ignition_time[1])
             line_avg += line
             line_avg_norm += line_norm
-##        print('Num: ',num)
-##        input('Continue....')
         line_avg /= num
-##        print('Line average',line_avg)
         line_avg_norm /= num
         if isnorm is True:
             plt.plot(line_avg_norm.T,y_plot,label=labels[int(i/2)])
@@ -477,213 +470,162 @@ def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
     return ylim
 
-def get_flametimeline(sets,data):
-    for i in range(0,len(sets),2):
-        start = int(sets[i])
-        stop = int(sets[i+1])
-        tests = np.linspace(start,stop,stop-start+1)
-        coordinates = get_line_coordinates(tests,data,[2,2,2])
-        
-        if coordinates is 0:
-            return
-        for j in range(0,len(tests)):
-            test = data[int(tests[j])-1]
-            cwd = os.getcwd()
-            pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
-            if os.path.exists(pfilepath) is False:
-                print('---------------------------------------------------------\nNo points file exists for this test number\n',tests[j],'\n')
-                usr = input('Ok (press return)')
-                return
-            p = np.loadtxt(pfilepath,unpack=True)
-##            x_val = int(p[0])
-##            y_val = int(coordinates[j,0])
-            num_points = int(len(p)/2)
-            x_val = []
-            y_val = []
-            for jj in range(0,len(p),2):
-                x_val.append(int(p[jj]))
-                y_val.append(int(p[jj+1]))
-            file = os.getcwd().replace('wfire','') + test.filename
-            img,filename = readfile(file,True)
-            frames,num_frames,num_rows,num_cols = get_image_properties(img)
-            ignition_frame = int(test.ignition_time[1])
-            eof = int(test.eof)
-            frame_span = int(eof-ignition_frame)
-            timeline = np.zeros((num_points,frame_span))
-            x_time = np.linspace(0,frame_span,frame_span)/frame_span
-            save_filepath = cwd+'\\plots_timeline\\'+test.filename.replace('.tif','')+'_timeline.png'
-            tfilepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
-            tfile = open(tfilepath,'x')
-            for jjj in range(num_points):
-                if jjj <= num_points/2:
-                    color = 'k'
-                    level = 1
-                else:
-                    color = 'b'
-                    level = -1
-                for k in range(frame_span):
-                    frame = frames[k+ignition_frame].astype(float)
-                    if frame[y_val[jjj],x_val[jjj]] > 35:
-                        timeline[jjj,k] = level
-                        save_val = level*x_time[k]
-                        tfile.write(str(save_val)+'\n')
-                plt.plot(x_time,timeline[jjj,:].T,color)
-            tfile.close()    
-            # plt.show()
-            # if os.path.exists(save_filepath):
-            #     print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-            #     print(pfilepath)
-            #     usr = input('Ok (press return)')
-            #     return
-            # plt.savefig(save_filepath)
-            plt.close()
+def get_flametimeline(test):        
+    cwd = os.getcwd()
+    pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
+    if os.path.exists(pfilepath) is False:
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
+        usr = input('Ok (press return)')
+        return
+    p = np.loadtxt(pfilepath,unpack=True)
+    num_points = int(len(p)/2)
+    x_val = []
+    y_val = []
+    for jj in range(0,len(p),2):
+        x_val.append(int(p[jj]))
+        y_val.append(int(p[jj+1]))
+    file = os.getcwd().replace('wfire','') + test.filename
+    img,filename = readfile(file,True)
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+    ignition_frame = int(test.ignition_time[1])
+    eof = int(test.eof)
+    frame_span = int(eof-ignition_frame)
+    timeline = np.zeros((num_points,frame_span))
+    x_time = np.linspace(0,frame_span,frame_span)/frame_span
+    save_filepath = cwd+'\\plots_timeline\\'+test.filename.replace('.tif','')+'_timeline.png'
+    tfilepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
+    tfile = open(tfilepath,'x')
+    for jjj in range(num_points):
+        if jjj <= num_points/2:
+            color = 'k'
+            level = 1
+        else:
+            color = 'b'
+            level = -1
+        for k in range(frame_span):
+            frame = frames[k+ignition_frame].astype(float)
+            if frame[y_val[jjj],x_val[jjj]] > 35:
+                timeline[jjj,k] = level
+                save_val = level*x_time[k]
+                tfile.write(str(save_val)+'\n')
+        plt.plot(x_time,timeline[jjj,:].T,color)
+    tfile.close()    
+    # plt.show()
+    # if os.path.exists(save_filepath):
+    #     print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
+    #     print(pfilepath)
+    #     usr = input('Ok (press return)')
+    #     return
+    # plt.savefig(save_filepath)
+    plt.close()
             
-def calc_avgint(sets,data,threshold):
+def calc_avgint(test,args):
     """ Calculates the average light intensity (for pixels above threshold)
     """
-    for i in range(0,len(sets),2):
-        start = int(sets[i])
-        stop = int(sets[i+1])
-        tests = np.linspace(start,stop,stop-start+1)
-
-        for j in range(0,len(tests)):
-            check = True
-            test = data[int(tests[j])-1]
-            file = os.getcwd().replace('wfire','') + test.filename
-            img,filename = readfile(file,True)
-            frames,num_frames,num_rows,num_cols = get_image_properties(img)
-            avgint = np.zeros((num_frames,1))
-            x_left,x_right,y_bot,y_top = load_gridpoints(test)
-
-            #####---------------------
-##            fig,ax=plt.subplots()
-##            ims = []
+    threshold = args[0]
+    check = True
+    file = os.getcwd().replace('wfire','') + test.filename
+    img,filename = readfile(file,True)
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+    avgint = np.zeros((num_frames,1))
+    x_left,x_right,y_bot,y_top = load_gridpoints(test)
 
 
-            counter = 0
-            cat = [0,0,0]
-            for k in range(0,num_frames):
-                counter+=1
-                ref_frame = frames[k]
-                ref_frame = ref_frame.astype(float) # Change to float to handle subtraction correctly
-                ref_frame[y_top:y_bot,x_left:x_right] = 0
-                if ref_frame.max() < threshold:
-                    continue
-                x_bool = ((ref_frame-threshold)>=0)
-                numpixels_frame = x_bool.sum()
-                y_mod = np.multiply(ref_frame,x_bool)
-                total = y_mod.sum()
-                avgint[k,0] = total/numpixels_frame/255
-                if avgint[k,0] >= 0 and avgint[k,0] < 85:
-                    cat[0]+=1
-                elif avgint[k,0] >= 85 and avgint[k,0] < 170:
-                    cat[1]+=1
-                elif avgint[k,0] >= 170 and avgint[k,0] <= 255:
-                    cat[2]+=1
-                else:
-                    input('Error')
-                #####----------------
-##                im=ax.imshow(y_mod)
-##                ims.append([im])
-##            ani = animation.ArtistAnimation(fig,ims,interval=50,blit=True,repeat_delay=1000)
-##            plt.show()
-                if check == False:
-##                    plt.imshow(ref_frame,cmap='nipy_spectral_r')
-                    plt.imshow(y_mod,cmap='nipy_spectral_r')
-                    plt.get_current_fig_manager().window.state('zoomed')
-                    plt.show(block=False)
-                    plt.pause(0.5)
-                    plt.clf
-                    if counter%10 == 0:
-                        plt.close()
-                    try:
-                        if keyboard.is_pressed('q'):
-                            check = True
-                    except:
-                        print()
-            x_plot = np.linspace(1,num_frames,num_frames)
-            x_plot/=num_frames
-            plt.plot(x_plot,avgint)
-            plt.xlabel('Normalized burning time')
-            plt.ylabel('Normalized average flame intensity')
-            plt.ylim(0,1)
-##            plt.get_current_fig_manager().window.state('zoomed')
-##            total_cat = cat[0]+cat[1]+cat[2]
-##            for k in range(0,len(cat)):
-##                cat[k] = round((cat[k]/total_cat)*100)
-##                
-##            mylabels = ['0-85: '+str(cat[0])+'%','85-170: '+str(cat[1])+'%','170-255: '+str(cat[2])+'%']
-##            plt.pie(cat,labels=mylabels)
-####            plt.show()
-####            plt.close()
-            save_filepath = os.getcwd()+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
-            if os.path.exists(save_filepath):
-                print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-                print(save_filepath)
-                usr = input('Ok (press return)')
-                return
-            plt.savefig(save_filepath)
-            plt.close()
-##            print(total,numpixels_frame)
-##            input()
-##            plt.show()
+    counter = 0
+    cat = [0,0,0]
+    for k in range(0,num_frames):
+        counter+=1
+        ref_frame = frames[k]
+        ref_frame = ref_frame.astype(float) # Change to float to handle subtraction correctly
+        ref_frame[y_top:y_bot,x_left:x_right] = 0
+        if ref_frame.max() < threshold:
+            continue
+        x_bool = ((ref_frame-threshold)>=0)
+        numpixels_frame = x_bool.sum()
+        y_mod = np.multiply(ref_frame,x_bool)
+        total = y_mod.sum()
+        avgint[k,0] = total/numpixels_frame/255
+        if avgint[k,0] >= 0 and avgint[k,0] < 85:
+            cat[0]+=1
+        elif avgint[k,0] >= 85 and avgint[k,0] < 170:
+            cat[1]+=1
+        elif avgint[k,0] >= 170 and avgint[k,0] <= 255:
+            cat[2]+=1
+        else:
+            input('Error')
+        if check == False:
+            plt.imshow(y_mod,cmap='nipy_spectral_r')
+            plt.get_current_fig_manager().window.state('zoomed')
+            plt.show(block=False)
+            plt.pause(0.5)
+            plt.clf
+            if counter%10 == 0:
+                plt.close()
+            try:
+                if keyboard.is_pressed('q'):
+                    check = True
+            except:
+                print()
+    x_plot = np.linspace(1,num_frames,num_frames)
+    x_plot/=num_frames
+    plt.plot(x_plot,avgint)
+    plt.xlabel('Normalized burning time')
+    plt.ylabel('Normalized average flame intensity')
+    plt.ylim(0,1)
+    save_filepath = os.getcwd()+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
+    if os.path.exists(save_filepath):
+        print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
+        print(save_filepath)
+        usr = input('Ok (press return)')
+        return
+    plt.savefig(save_filepath)
+    plt.close()
+    return
 
-def creategrids(sets,data):
+def creategrids(test):
     sector_width = 30
-    for i in range(0,len(sets),2):
-        start = int(sets[i])
-        stop = int(sets[i+1])
-        tests = np.linspace(start,stop,stop-start+1)
+    heatmap = load_heatmap(test)
+    cwd = os.getcwd()
+    pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
+    if os.path.exists(pfilepath) is False:
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
+        usr = input('Ok (press return)')
+        return
+    p = np.loadtxt(pfilepath)
+    x_left,x_right,y_bot,y_top = p[0],p[1],p[2],p[3]
+    img = heatmap
+    num_rows = img.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = 4500
+    img = np.concatenate((img,calib),axis=1)
 
-        heat_maps = load_heatmaps(tests,data)
-
-        for j in range(0,len(heat_maps)):
-            test = data[int(tests[j])-1]
-            cwd = os.getcwd()
-            pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-            if os.path.exists(pfilepath) is False:
-                print('---------------------------------------------------------\nNo points file exists for this test number\n',tests[j],'\n')
-                usr = input('Ok (press return)')
-                return
-            p = np.loadtxt(pfilepath)
-            x_left,x_right,y_bot,y_top = p[0],p[1],p[2],p[3]
-            img = heat_maps[j]
-            num_rows = img.shape[0]
-            calib = np.zeros((num_rows,1))
-            calib[0,0] = 4500
-            img = np.concatenate((img,calib),axis=1)
-
-##            print(x_left,x_right,'\n',y_top,y_bot)
-            num_x = int((x_right-x_left)/sector_width)+2
-            num_y = int((y_bot-y_top)/sector_width)+2
-            
-            x_ticks,y_ticks = [],[]
-            for k in range(0,num_x):
-                x = k*sector_width+x_left
-                x_ticks.append(x)
-                if x >= x_right:
-                    x_ticks[k] = x_right
-                    break
-##            print(x_ticks)
-            for k in range(0,num_y):
-                y = k*sector_width+y_top 
-                y_ticks.append(y)
-                if y >= y_bot:
-                    y_ticks[k] = y_bot
-                    break
-##            print(y_ticks)
-##            input()
-            x_plot = np.linspace(x_left,x_right,100)
-            plt.imshow(img,cmap='nipy_spectral_r')
-            plt.get_current_fig_manager().window.showMaximized()
-            for k in y_ticks:
-                y_plot = np.linspace(k,k,100)
-                plt.plot(x_plot,y_plot,'k')
-            y_plot = np.linspace(y_top,y_bot,100)
-            for k in x_ticks:
-                x_plot = np.linspace(k,k,100)
-                plt.plot(x_plot,y_plot,'k')
-            plt.show()
+    num_x = int((x_right-x_left)/sector_width)+2
+    num_y = int((y_bot-y_top)/sector_width)+2
+    
+    x_ticks,y_ticks = [],[]
+    for k in range(0,num_x):
+        x = k*sector_width+x_left
+        x_ticks.append(x)
+        if x >= x_right:
+            x_ticks[k] = x_right
+            break
+    for k in range(0,num_y):
+        y = k*sector_width+y_top 
+        y_ticks.append(y)
+        if y >= y_bot:
+            y_ticks[k] = y_bot
+            break
+    x_plot = np.linspace(x_left,x_right,100)
+    plt.imshow(img,cmap='nipy_spectral_r')
+    plt.get_current_fig_manager().window.showMaximized()
+    for k in y_ticks:
+        y_plot = np.linspace(k,k,100)
+        plt.plot(x_plot,y_plot,'k')
+    y_plot = np.linspace(y_top,y_bot,100)
+    for k in x_ticks:
+        x_plot = np.linspace(k,k,100)
+        plt.plot(x_plot,y_plot,'k')
+    plt.show()
             
     return
                 
@@ -798,12 +740,11 @@ def get_ima(test):
         
             
 
-
 def load_gridpoints(test):
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
     if os.path.exists(pfilepath) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnum,'\n')
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
         usr = input('Ok (press return)')
         return
     p = np.loadtxt(pfilepath)
