@@ -1,4 +1,5 @@
 from cgi import test
+from cmath import nan
 from func_wfipa import readfile, get_image_properties
 import func_wffpa as wf
 import func_run as rn
@@ -127,11 +128,13 @@ def run_createplots(sets,data,distance,ylim):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print('Type option from the following list and hit enter:')
-    print(' Plot flame profiles ------------ p')
-    print(' Plot flame timelines ----------- t')
-    print(' Plot ignition times ------------ i')
-    print(' Plot avgerage light intensity -- a')
-    print(' Plot timeline medians ---------- m')
+    print(' Plot flame profiles ------------- p')
+    print(' Plot flame timelines ------------ t')
+    print(' Plot ignition times ------------- i')
+    print(' Plot avgerage light intensity --- a')
+    print(' Plot timeline medians ----------- m')
+    print(' Plot max flame areas ------------ r')
+    print(' Plot avg int of max flame areas - s')
     usr = input('Selected option: ')
     if usr == 'p':
         run_plotprofiles(sets,data,distance,ylim)
@@ -150,6 +153,10 @@ def run_createplots(sets,data,distance,ylim):
         wf.calc_avgint(sets,data,threshold)
     elif usr == 'm':
         run_plotmedians(sets,data)
+    elif usr == 'r':
+        run_plot_max_flame_area(sets,data)
+    elif usr == 's':
+        run_plot_ima(sets,data)
     else:
         input('Error (hit \'Enter\' to continue)')
         return
@@ -280,22 +287,35 @@ def run_flamearea(sets,data):
             return
     return
 
+def run_plot_max_flame_area(sets,data):
+    max_flame_area_sets = loop_handl(sets,data,'pltarea',None)
+    wf.plot_max_flame_area(max_flame_area_sets)
+
+def run_plot_ima(sets,data):
+    ima_sets = loop_handl(sets,data,'pltima',None)
+    wf.plot_ima(ima_sets)
+
 def loop_handl(sets,data,tag,args):
     nsets = len(sets)
+    outputs = []
     for i in range(0,nsets,2):
         start = int(sets[i])
         stop = int(sets[i+1])
         tests = np.linspace(start,stop,stop-start+1)
         ntests = len(tests)
 
+        switch_out = []
         for j in range(ntests):
             num = int(tests[j])-1
             test = data[num]
-            func_switch(test,tag,args)
+            switch_out.append(func_switch(test,tag,args))
+        outputs.append(switch_out)
+    return outputs
 
 def func_switch(test,tag,args):
+    func_out = None
     if tag == 'ima':
-        wf.get_ima(test)
+        func_out = wf.get_ima(test)
     elif tag == 'area':
         wf.get_max_flame_area(test)
     elif tag == 'grid':
@@ -304,8 +324,13 @@ def func_switch(test,tag,args):
         wf.calc_avgint(test,args)
     elif tag == 'timeline':
         wf.get_flametimeline(test)
+    elif tag == 'pltarea':
+        func_out = wf.load_area(test)[0]
+    elif tag == 'pltima':
+        func_out = wf.get_ima(test)
     else:
-        return
+        return func_out
+    return func_out
 #-------------------------------------------------------------------------------------#
 #-------------------------------------------------------------------------------------#
 def main():
