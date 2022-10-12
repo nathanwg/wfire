@@ -289,11 +289,11 @@ def run_flamearea(sets,data):
 
 def run_plot_max_flame_area(sets,data):
     max_flame_area_sets = loop_handl(sets,data,'pltarea',None)
-    wf.plot_max_flame_area(max_flame_area_sets)
+    wf.plot_max_flame_area(sets,data,max_flame_area_sets)
 
 def run_plot_ima(sets,data):
     ima_sets = loop_handl(sets,data,'pltima',None)
-    wf.plot_ima(ima_sets)
+    wf.plot_ima(sets,data,ima_sets)
 
 def loop_handl(sets,data,tag,args):
     nsets = len(sets)

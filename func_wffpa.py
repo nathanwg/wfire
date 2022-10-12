@@ -653,31 +653,15 @@ def get_median(test):
     return median
 
 def plotmedians(sets,data,medians_sets):
-    labels = []
-    temperatures = []
-    fmc = []
-    for i in range(0,len(sets),2):
-        start = int(sets[i])
-        stop = int(sets[i+1])
-        tests = np.linspace(start,stop,stop-start+1)
-        test = data[int(tests[0])-1]
-        temperature = int(test.set_type[3])
-        temp_label = 'avg T = '+str(temperature)+' C'
-        labels.append(temp_label)
-        temperatures.append(temperature)
-        fmc.append(test.fmc)
-        
+    showunc = False
+    labels,temperatures,linestyle = get_plotinfo(sets,data)   
     median_averages = []
-    for i in range(len(medians_sets)):
-        if fmc[i] == 0:
-            linestyle = 'ko'
-        else:
-            linestyle = 'go'            
+    for i in range(len(medians_sets)):           
         median_averages.append(np.mean(medians_sets[i]))
-        unc = calc_uncertainty(medians_sets[i],10)
-        # plt.plot(temperatures[i],median_averages[i],linestyle)
-        print(unc)
-        plt.errorbar(temperatures[i],median_averages[i],fmt=linestyle,yerr=unc,capsize=4)
+        unc,cap = calc_uncertainty(medians_sets[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],median_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Median of flame activity')
     plt.ylim(0,1)
@@ -773,30 +757,49 @@ def load_area(test):
     max_flamearea,frame_num = vals[0],vals[1]
     return max_flamearea,frame_num
 
-def plot_max_flame_area(max_flamearea_sets):    
+def plot_max_flame_area(sets,data,max_flamearea_sets):  
+    showunc = False
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
     area_averages = []
-    temperatures = [460,520,610,670,880]
     for i in range(len(max_flamearea_sets)):           
         area_averages.append(np.mean(max_flamearea_sets[i]))
-        unc = calc_uncertainty(max_flamearea_sets[i],10)
-        plt.plot(temperatures[i],area_averages[i],'ko')
-        print(unc)
-        # plt.errorbar(temperatures[i],area_averages[i],'ko',yerr=unc,capsize=4)
+        unc,cap = calc_uncertainty(max_flamearea_sets[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],area_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Maximum flame area')
     plt.show()
     return
 
-def plot_ima(ima_sets):
+def plot_ima(sets,data,ima_sets):
+    showunc = False
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
     ima_averages = []
-    temperatures = [460,520,610,670,880]
     for i in range(len(ima_sets)):        
         ima_averages.append(np.mean(ima_sets[i]))
-        unc = calc_uncertainty(ima_sets[i],10)
-        plt.plot(temperatures[i],ima_averages[i],'ko')
-        print(unc)
-        # plt.errorbar(temperatures[i],ima_averages[i],'ko',yerr=unc,capsize=4)
+        unc,cap = calc_uncertainty(ima_sets[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],ima_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average intensity of max flame area')
     plt.show()
     return
+
+def get_plotinfo(sets,data):
+    labels,temperatures,linestyle = [],[],[]
+    for i in range(0,len(sets),2):
+        start = int(sets[i])
+        stop = int(sets[i+1])
+        tests = np.linspace(start,stop,stop-start+1)
+        test = data[int(tests[0])-1]
+        temperature = int(test.set_type[3])
+        temp_label = 'avg T = '+str(temperature)+' C'
+        labels.append(temp_label)
+        temperatures.append(temperature)
+        if test.fmc == 0:
+            linestyle.append('ko')
+        else:
+            linestyle.append('go')
+    return labels,temperatures,linestyle
