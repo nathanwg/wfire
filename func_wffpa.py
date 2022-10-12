@@ -1,3 +1,4 @@
+from cProfile import label
 from cgi import test
 from heapq import nsmallest
 from json import load
@@ -659,9 +660,11 @@ def plotmedians(sets,data,medians_sets):
         unc,cap = calc_uncertainty(medians_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],median_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
+        plt.errorbar(temperatures[i],median_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap,label=labels[i])
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Median of flame activity')
+    plt.title('Average median of flame detection during burning')
+    plt.legend()
     plt.ylim(0,1)
     plt.show()
     return
@@ -764,9 +767,11 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
         unc,cap = calc_uncertainty(max_flamearea_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],area_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
+        plt.errorbar(temperatures[i],area_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap,label=labels[i])
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Maximum flame area')
+    plt.title('Average maximum flame area')
+    plt.legend()
     plt.show()
     return
 
@@ -779,14 +784,16 @@ def plot_ima(sets,data,ima_sets):
         unc,cap = calc_uncertainty(ima_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],ima_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap)
+        plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc,capsize=cap)
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average intensity of max flame area')
+    plt.title('Average normalized light intensity of maximum flame area')
     plt.show()
     return
 
 def get_plotinfo(sets,data):
     labels,temperatures,linestyle = [],[],[]
+    labeldried,labellive=False,False
     for i in range(0,len(sets),2):
         start = int(sets[i])
         stop = int(sets[i+1])
@@ -794,10 +801,19 @@ def get_plotinfo(sets,data):
         test = data[int(tests[0])-1]
         temperature = int(test.set_type[3])
         temp_label = 'avg T = '+str(temperature)+' C'
-        labels.append(temp_label)
         temperatures.append(temperature)
         if test.fmc == 0:
             linestyle.append('ko')
+            if labeldried == True:
+                labels.append(None)
+            elif labeldried == False:
+                labels.append('Oven-dried fuel')
+                labeldried = True
         else:
-            linestyle.append('go')
+            linestyle.append('g^')
+            if labellive == True:
+                labels.append(None)
+            elif labellive == False:
+                labels.append('Live fuel')
+                labellive = True
     return labels,temperatures,linestyle
