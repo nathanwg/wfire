@@ -2,6 +2,7 @@ import func_wffpa as wf
 import numpy as np
 import os
 import time
+import run_wffpa
 
 def run_heatmap_g(sets,data):
     os.system('cls')
@@ -74,17 +75,8 @@ def run_selectpoints_s(sets,data):
         points_type = 'grid'
     else:
         return
-    for i in range(0,len(sets),2):
-        tests = np.linspace(int(sets[i]),int(sets[i+1]),int(sets[i+1]-sets[i]+1))
-        heat_maps = wf.load_heatmaps(tests,data)
-        loop_count = 0
-        for j in heat_maps:
-            points,num_points,isvalid = wf.get_points(j,data,tests[loop_count],points_type)
-            if isvalid is False:
-                loop_count += 1
-                continue
-            wf.save_points(tests[loop_count],data,points,points_type,num_points)
-            loop_count += 1
+    run_wffpa.loop_handl(sets,data,'selectpoints',args=points_type)
+
 
 def run_linedisplay_c(sets,data,distance):
     os.system('cls')

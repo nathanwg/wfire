@@ -178,11 +178,10 @@ def displaymaps(heat_maps,start,stop):
             plt.show()
     return True
 
-def get_points(img,data,test_num,points_type):
+def get_points(img,test,points_type):
     """....
     """
     cwd = os.getcwd()
-    test = data[int(test_num)-1]
     if points_type == 'profile':
         num_points = 2
         pfilepath = cwd+'\\points\\'+test.filename.replace('.tif','')+'_points.txt'
@@ -214,7 +213,7 @@ def get_points(img,data,test_num,points_type):
 ##    print(p[0][0],p[0][1])
     plt.close()
 
-    return p,num_points,True
+    return p,num_points
 
 def refine_gridpoints(p):
     x_left,x_right,y_bot,y_top = 255,0,0,255
@@ -256,10 +255,9 @@ def load_heatmap(test):
     return heatmap
 
 
-def save_points(test_num,data,p,points_type,num_points):
+def save_points(test,p,num_points,points_type):
     """...
     """
-    test = data[int(test_num)-1]
     cwd = os.getcwd()
     if points_type == 'profile':
         pfilepath = cwd+'\\points\\'+test.filename.replace('.tif','')+'_points.txt'
@@ -368,7 +366,6 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
         line_avg = 0
         line_avg_norm = 0
         labels = ['avg T = 460','avg T = 520','avg T = 610','avg T = 670','avg T = 880']
-        x_plot = np.linspace(0,9,num_cols)
         num = len(tests)
         for ii in range(0,num):
             test = data[int(tests[ii])-1]
@@ -398,6 +395,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
             line_avg_norm += line_norm
         line_avg /= num
         line_avg_norm /= num
+        x_plot = np.linspace(0,9,num_cols)
         if isnorm is True:
             plt.plot(x_plot,line_avg_norm.T,label=labels[int(i/2)])
             axlabel = 's/s'
@@ -425,7 +423,6 @@ def plotprofiles_v(sets,data,isnorm,xlim):
 
         line_avg = 0
         line_avg_norm = 0
-        y_plot = np.linspace(0,9,num_rows)
         num = len(tests)
         for ii in range(0,num):
             test = data[int(tests[ii])-1]
@@ -452,6 +449,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
             line_avg_norm += line_norm
         line_avg /= num
         line_avg_norm /= num
+        y_plot = np.linspace(0,9,num_rows)
         if isnorm is True:
             plt.plot(line_avg_norm.T,y_plot,label=labels[int(i/2)])
             axlabel = 's/s'

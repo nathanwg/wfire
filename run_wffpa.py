@@ -328,6 +328,10 @@ def func_switch(test,tag,args):
         func_out = wf.load_area(test)[0]
     elif tag == 'pltima':
         func_out = wf.get_ima(test)
+    elif tag == 'selectpoints':
+        heatmap = wf.load_heatmap(test)
+        points,num_points = wf.get_points(heatmap,test,points_type=args)
+        wf.save_points(test,points,num_points,points_type=args)
     else:
         return func_out
     return func_out
