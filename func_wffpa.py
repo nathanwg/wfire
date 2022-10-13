@@ -652,7 +652,7 @@ def get_median(test):
     return median
 
 def plotmedians(sets,data,medians_sets):
-    showunc = False
+    showunc = True
     labels,temperatures,linestyle = get_plotinfo(sets,data)   
     median_averages = []
     for i in range(len(medians_sets)):           
@@ -755,7 +755,7 @@ def calc_uncertainty(arr,n):
 def load_area(test):
     afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
     vals = np.load(afilepath)
-    max_flamearea,frame_num = vals[0],vals[1]
+    max_flamearea,frame_num = vals[0]/(10**2),vals[1]
     return max_flamearea,frame_num
 
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
@@ -769,14 +769,14 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
             unc,cap = 0,0
         plt.errorbar(temperatures[i],area_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap,label=labels[i])
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
-    plt.ylabel('Maximum flame area')
+    plt.ylabel('Maximum flame area (cm$^2$)')
     plt.title('Average maximum flame area')
     plt.legend()
     plt.show()
     return
 
 def plot_ima(sets,data,ima_sets):
-    showunc = False
+    showunc = True
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     ima_averages = []
     for i in range(len(ima_sets)):        
@@ -784,7 +784,7 @@ def plot_ima(sets,data,ima_sets):
         unc,cap = calc_uncertainty(ima_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc,capsize=cap)
+        plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap)
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average intensity of max flame area')
     plt.title('Average normalized light intensity of maximum flame area')
