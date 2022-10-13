@@ -788,6 +788,7 @@ def plot_ima(sets,data,ima_sets):
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average intensity of max flame area')
     plt.title('Average normalized light intensity of maximum flame area')
+    plt.ylim(0,1)
     plt.show()
     return
 
