@@ -784,11 +784,12 @@ def plot_ima(sets,data,ima_sets):
         unc,cap = calc_uncertainty(ima_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap)
+        plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap,label=labels[i])
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average intensity of max flame area')
     plt.title('Average normalized light intensity of maximum flame area')
     plt.ylim(0,1)
+    plt.legend()
     plt.show()
     return
 
