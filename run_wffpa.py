@@ -47,7 +47,7 @@ def run_linedisplay(sets,data,distance):
         print(' Go back -------------- b')
         usr = input('Selected option: ')
         if usr == 'c':
-            rn.run_linedisplay_c(sets,data,distance)
+            loop_handl(sets,data,'linedisplay',args=[distance])
         elif usr == 's':
             print('Distance values: ',distance)
             input(' ')
@@ -309,6 +309,8 @@ def loop_handl(sets,data,tag,args):
             num = int(tests[j])-1
             test = data[num]
             switch_out.append(func_switch(test,tag,args))
+            if switch_out[j] == 999:
+                return outputs
         outputs.append(switch_out)
     return outputs
 
@@ -330,8 +332,10 @@ def func_switch(test,tag,args):
         func_out = wf.get_ima(test)
     elif tag == 'selectpoints':
         heatmap = wf.load_heatmap(test)
-        points,num_points = wf.get_points(heatmap,test,points_type=args)
-        wf.save_points(test,points,num_points,points_type=args)
+        points,num_points = wf.get_points(heatmap,test,points_type=args[0])
+        wf.save_points(test,points,num_points,points_type=args[0])
+    elif tag == 'linedisplay':
+        func_out = rn.run_linedisplay_c(test,distance=args[0])
     else:
         return func_out
     return func_out
@@ -361,11 +365,8 @@ def main():
         print(' The following test numbers are being considered:')
         sets_list = ''
         for i in range(0,len(sets),2):
-            if i == len(sets)-2:
-                sets_list = sets_list + str(round(sets[i]))+'-'+str(round(sets[i+1]))
-            else:    
-                sets_list = sets_list + str(round(sets[i]))+'-'+str(round(sets[i+1]))+', '
-        print('\n',sets_list,'\n')
+            print(round(sets[i]),'-',round(sets[i+1]))
+        print()
         # print()
         # print(' Line currently being evaluated at ',distance[0],' cm\n')
         # print(' ylim for plot is set at: ',ylim,'\n')

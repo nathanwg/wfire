@@ -286,37 +286,32 @@ def save_points(test,p,num_points,points_type):
     pfile.close
     print('Save process complete (Press enter)')
 
-def get_line_coordinates(tests,data,d):
-    coordinates = np.zeros((len(tests),4))
-    k = 0
-    conv_fact = data[int(tests[0])-1].spatial_calibration
+def get_line_coordinates(test,d):
+    coordinates = np.zeros((1,4))
+    conv_fact = test.spatial_calibration
     for ii in range(0,len(d)):
         d[ii] /= 100
         d[ii] /= conv_fact
         d[ii] = round(d[ii])
-    for i in tests:
-        test = data[int(i)-1]
-        pathname = test.filename.replace('.tif','')
-        cwd = os.getcwd()
-        path = cwd+'\\points\\'+pathname+'_points.txt'
-        if os.path.exists(path) is False:
-            print('---------------------------------------------------------\nNo points file exists for this test number\n',i,'\n')
-            usr = input('Ok (press return)')
-            return 0
-        p = np.loadtxt(path,unpack=True)
-        L = d[1]+d[2]
-        x_0 = (p[0]+p[2])/2
-        y_0 = (p[1]+p[3])/2
-        center = [x_0,y_0]
+    pathname = test.filename.replace('.tif','')
+    cwd = os.getcwd()
+    path = cwd+'\\points\\'+pathname+'_points.txt'
+    if os.path.exists(path) is False:
+        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
+        usr = input('Ok (press return)')
+        return 0
+    p = np.loadtxt(path,unpack=True)
+    L = d[1]+d[2]
+    x_0 = (p[0]+p[2])/2
+    y_0 = (p[1]+p[3])/2
+    center = [x_0,y_0]
 
-        x_c = center[0]
-        y_c = center[1]-d[0]
-        x_L = x_c - d[1]
-        x_r = x_c + d[2]
-        dx = (x_r-x_L)/100
-##        coordinates[k,0],coordinates[k,1],coordinates[k,2],coordinates[k,3] = y_c,x_L,dx,L
-        coordinates[k,0],coordinates[k,1],coordinates[k,2],coordinates[k,3] = y_c,x_L,1,L
-        k += 1
+    x_c = center[0]
+    y_c = center[1]-d[0]
+    x_L = x_c - d[1]
+    x_r = x_c + d[2]
+    dx = (x_r-x_L)/100
+    coordinates[0,0],coordinates[0,1],coordinates[0,2],coordinates[0,3] = y_c,x_L,1,L
     for ii in range(0,len(d)):
         d[ii] *= 100
         d[ii] *= conv_fact
@@ -359,11 +354,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
         temperature = int(data[int(tests[0])-1].set_type[3])
         temp_label = 'avg T = '+str(temperature)+' C'
         labels.append(temp_label)
-        coordinates = get_line_coordinates(tests,data,distance)
         
-        if coordinates is 0:
-            return
-        L = coordinates[0,3]
         line_avg = 0
         line_avg_norm = 0
         labels = ['avg T = 460','avg T = 520','avg T = 610','avg T = 670','avg T = 880']
@@ -375,7 +366,10 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
                 return
             num_cols = heatmap.shape[1]
             line = np.zeros((1,num_cols))
-            y_c,x_L,dx = coordinates[ii,0],coordinates[ii,1],coordinates[ii,2]
+            coordinates = get_line_coordinates(test,distance)
+            if coordinates is 0:
+                return
+            y_c,x_L,dx = coordinates[0,0],coordinates[0,1],coordinates[0,2]
             check = False
             for j in range(0,num_cols):
                 y = round(y_c)

@@ -75,21 +75,18 @@ def run_selectpoints_s(sets,data):
         points_type = 'grid'
     else:
         return
-    run_wffpa.loop_handl(sets,data,'selectpoints',args=points_type)
+    run_wffpa.loop_handl(sets,data,'selectpoints',args=[points_type])
 
 
-def run_linedisplay_c(sets,data,distance):
-    os.system('cls')
-    for i in range(0,len(sets),2):
-        tests = np.linspace(int(sets[i]),int(sets[i+1]),int(sets[i+1]-sets[i]+1))
-        heat_maps = wf.load_heatmaps(tests,data)
-        coordinates = wf.get_line_coordinates(tests,data,distance)
-        if heat_maps is 0 or coordinates is 0:
-            return
-        k = 0
-        for j in heat_maps:
-            usr = input('Continue (\'b\' to go back)')
-            if usr == 'b':
-                return
-            wf.display_linedisplay(j,coordinates[k,:])
-            k+=1
+def run_linedisplay_c(test,distance):
+    usr = input('Continue (\'b\' to go back)')
+    if usr == 'b':
+        return 999
+    coordinates = wf.get_line_coordinates(test,distance)
+    heatmap = wf.load_heatmap(test)
+    iscoordinates = isinstance(coordinates,np.ndarray)
+    isheatmap = isinstance(heatmap,np.ndarray)
+    if isheatmap == 0 or iscoordinates == 0:
+        return None
+    wf.display_linedisplay(heatmap,coordinates[0,:])
+    return None
