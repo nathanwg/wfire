@@ -162,9 +162,24 @@ def run_createplots(sets,data,distance,ylim):
         return
 
 def run_plotigtime(sets,data):
+    iscontinue,settings = display_igplotsettings(sets,data)
+    if iscontinue == False:
+        return
+    igtimes = loop_handl(sets,data,'igtimes',settings)
+    return
+
+def display_igplotsettings(sets,data):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print('The following settings for the plot are: ')
+    settings = get_settings(sets,data)
+    print(' Set type:',settings[0],'\n Temperatures:',settings[1],'\n Height:',settings[2],'\n Condition:',settings[3])
+    usr = input(' Hit \'Enter\' to continue or \'b\' to go back: ')
+    if usr == 'b':
+        return False,None
+    return True,settings
+
+def get_settings(sets,data):
     filename = 'cache_plot_settings.txt'
     settings = np.loadtxt(filename,unpack=True)
     set_type = [settings[0],settings[1]]
@@ -186,12 +201,8 @@ def run_plotigtime(sets,data):
     temps_num = len(settings)-3
     for i in range(temps_num):
         temps.append(settings[i+1])
-    print(' Set type:',set_type)
-    print(' Temperatures:',temps)
-    print(' Height:',set_height)
-    print(' Condition:',set_condition)
-    input()
-    return
+    return [set_type,temps,set_height,set_condition]
+
 
 def run_plotmedians(sets,data):
     medians_sets = []
@@ -336,6 +347,9 @@ def func_switch(test,tag,args):
         wf.save_points(test,points,num_points,points_type=args[0])
     elif tag == 'linedisplay':
         func_out = rn.run_linedisplay_c(test,distance=args[0])
+    elif tag == 'igtimes':
+        input('Hello there')
+        func_out = 999
     else:
         return func_out
     return func_out

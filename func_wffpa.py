@@ -787,6 +787,9 @@ def plot_ima(sets,data,ima_sets):
     plt.show()
     return
 
+def plot_igtime():
+    return
+
 def get_plotinfo(sets,data):
     labels,temperatures,linestyle = [],[],[]
     labeldried,labellive=False,False
