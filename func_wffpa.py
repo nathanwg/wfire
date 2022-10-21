@@ -23,7 +23,13 @@ def importdata(datafile='data.txt',namesfile='filenames.txt'):
     data = []
     for i in range(0,len(filenames)):
         filename = filenames[i]+'.tif'
-        ig_test = Test(filename,(month[i],day[i],year[i]),testnum[i],(set_[i],orientation[i],height[i],temp[i]),fmc[i],(time[i],int(frame[i])),spatial[i],eof[i])
+        if set_[i] == 0 or set_[i] == 1:
+            stype = 'individual'
+        elif set_[i] == 2:
+            stype = 'multiple'
+        else:
+            stype = None
+        ig_test = Test(filename,(month[i],day[i],year[i]),testnum[i],(stype,orientation[i],height[i],temp[i]),fmc[i],(time[i],int(frame[i])),spatial[i],eof[i])
         data.append(ig_test)
     return tuple(data)
 
@@ -647,7 +653,7 @@ def get_median(test):
 
 def plotmedians(sets,data,medians_sets):
     showunc = True
-    labels,temperatures,linestyle = get_plotinfo(sets,data)   
+    labels,temperatures,linestyle = get_plotinfo(sets,data,pltype)   
     median_averages = []
     for i in range(len(medians_sets)):           
         median_averages.append(np.mean(medians_sets[i]))
@@ -754,7 +760,7 @@ def load_area(test):
 
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
     showunc = False
-    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    labels,temperatures,linestyle = get_plotinfo(sets,data,'area') 
     area_averages = []
     for i in range(len(max_flamearea_sets)):           
         area_averages.append(np.mean(max_flamearea_sets[i]))
@@ -771,7 +777,7 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
 
 def plot_ima(sets,data,ima_sets):
     showunc = True
-    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    labels,temperatures,linestyle = get_plotinfo(sets,data,'ima') 
     ima_averages = []
     for i in range(len(ima_sets)):        
         ima_averages.append(np.mean(ima_sets[i]))
@@ -787,32 +793,53 @@ def plot_ima(sets,data,ima_sets):
     plt.show()
     return
 
-def plot_igtime():
+def plot_igtime(sets,data,igtimes):
+    showunc = False
+    labels,temperatures,linestyle = get_plotinfo(sets,data,'igtime') 
+    igtimes_averages = []
+    for i in range(len(igtimes)):        
+        igtimes_averages.append(np.mean(igtimes[i]))
+        unc,cap = calc_uncertainty(igtimes[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],igtimes_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap,label=labels[i])
+    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.ylabel('Average ignition time (s)')
+    plt.title('Average ignition times')
+    plt.legend()
+    plt.show()
+    return
     return
 
-def get_plotinfo(sets,data):
+def get_plotinfo(sets,data,pltype):
     labels,temperatures,linestyle = [],[],[]
-    labeldried,labellive=False,False
+    labeldried,labellive_m,labellive_i=False,False,False
     for i in range(0,len(sets),2):
         start = int(sets[i])
         stop = int(sets[i+1])
         tests = np.linspace(start,stop,stop-start+1)
         test = data[int(tests[0])-1]
         temperature = int(test.set_type[3])
-        temp_label = 'avg T = '+str(temperature)+' C'
         temperatures.append(temperature)
         if test.fmc == 0:
             linestyle.append('ko')
             if labeldried == True:
                 labels.append(None)
             elif labeldried == False:
-                labels.append('Oven-dried fuel')
+                labels.append('Oven-dried fuel-'+test.set_type[0])
                 labeldried = True
-        else:
+        elif test.fmc != 0 and test.set_type[0] == 'multiple':
             linestyle.append('g^')
-            if labellive == True:
+            if labellive_m == True:
                 labels.append(None)
-            elif labellive == False:
-                labels.append('Live fuel')
-                labellive = True
+            elif labellive_m == False:
+                labels.append('Live fuel-'+test.set_type[0])
+                labellive_m = True
+        elif test.fmc != 0 and test.set_type[0] == 'individual':
+            linestyle.append('bo')
+            if labellive_i == True:
+                labels.append(None)
+            elif labellive_i == False:
+                labels.append('Live fuel-'+test.set_type[0])
+                labellive_i = True
     return labels,temperatures,linestyle

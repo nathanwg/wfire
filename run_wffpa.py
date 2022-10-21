@@ -162,47 +162,8 @@ def run_createplots(sets,data,distance,ylim):
         return
 
 def run_plotigtime(sets,data):
-    iscontinue,settings = display_igplotsettings(sets,data)
-    if iscontinue == False:
-        return
-    igtimes = loop_handl(sets,data,'igtimes',settings)
-    return
-
-def display_igplotsettings(sets,data):
-    os.system('cls')
-    print('\n\n\n\n\n','--------------------------------------------------','\n')
-    print('The following settings for the plot are: ')
-    settings = get_settings(sets,data)
-    print(' Set type:',settings[0],'\n Temperatures:',settings[1],'\n Height:',settings[2],'\n Condition:',settings[3])
-    usr = input(' Hit \'Enter\' to continue or \'b\' to go back: ')
-    if usr == 'b':
-        return False,None
-    return True,settings
-
-def get_settings(sets,data):
-    filename = 'cache_plot_settings.txt'
-    settings = np.loadtxt(filename,unpack=True)
-    set_type = [settings[0],settings[1]]
-    for i in set_type:
-        if i == 1:
-            i = 'Individual needle on stem'
-        elif i == 2:
-            i = 'Multiple needles'
-        elif i == 0:
-            i = 'Individual needle'
-    set_condition = [settings[-2],settings[-1]]
-    for i in set_condition:
-        if i == 1:
-            i = 'Live'
-        elif i == 0:
-            i = 'Oven-dried'
-    set_height = settings[-2]
-    temps = []
-    temps_num = len(settings)-3
-    for i in range(temps_num):
-        temps.append(settings[i+1])
-    return [set_type,temps,set_height,set_condition]
-
+    igtimes = loop_handl(sets,data,'igtimes',None)
+    wf.plot_igtime(sets,data,igtimes)
 
 def run_plotmedians(sets,data):
     medians_sets = []
@@ -348,8 +309,7 @@ def func_switch(test,tag,args):
     elif tag == 'linedisplay':
         func_out = rn.run_linedisplay_c(test,distance=args[0])
     elif tag == 'igtimes':
-        input('Hello there')
-        func_out = 999
+        func_out = test.ignition_time[1]
     else:
         return func_out
     return func_out
