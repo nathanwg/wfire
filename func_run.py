@@ -20,10 +20,8 @@ def run_heatmap_g(sets,data):
         thresh = 50
     else:
         print('Error')
-    for i in range(0,len(sets),2):
-        tests = np.linspace(int(sets[i]),int(sets[i+1]),int(sets[i+1]-sets[i]+1))
-        heat_maps = wf.get_heatmaps(tests,data,False,True,thresh)
-    return heat_maps
+    func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save])
+    return func
 
 def run_heatmap_d(sets,heat_maps,data):
     os.system('cls')

@@ -310,6 +310,8 @@ def func_switch(test,tag,args):
         func_out = rn.run_linedisplay_c(test,distance=args[0])
     elif tag == 'igtimes':
         func_out = test.ignition_time[1]
+    elif tag == 'getmap':
+        func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0])
     else:
         return func_out
     return func_out

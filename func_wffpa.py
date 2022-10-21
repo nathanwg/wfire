@@ -116,49 +116,33 @@ def show_ignition(testnums,data):
         frames = img[1]
         show_frames(frames,test.ignition_time[1],test.eof)
 
-def get_heatmaps(testnums,data,findaverage,save,thresh):
+def get_heatmaps(test,save,thresh):
     """.....
     """
-    norm = 0
-    norm = bool(norm)
-    heat_maps = []
-    counter = 0
-    for i in testnums:
-        test = data[int(i)-1]
-        print(test.testnumber)
-        file = os.getcwd().replace('wfire','') + test.filename
-        img,filename = readfile(file,True)
-        frames,num_frames,num_rows,num_cols = get_image_properties(img)
-        heatmap = np.zeros((num_rows,num_cols))
-
-        frame_num = 0
-        print('threshold value: ',thresh)
-        for j in frames:
-            j = j.astype(float)
-            arr = (j-thresh)>0
-            heatmap+=arr
-            frame_num += 1
-            if frame_num > test.eof:
-                break
-        heat_maps.append(heatmap)
-        if save is True:
-            name = test.filename.replace('.tif','')
-            cwd = os.getcwd()
-            cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
-            if os.path.exists(cwd):
-                print('---------------------------------------------------------\nLooks like there\'s already a file with this name. Delete existing file if you are wanting to overwrite\n')
-                usr = input('Ok (press return)')
-                continue
-            np.save(cwd,heatmap)
-        counter+=1
-    
-    if findaverage is True:
-        avg_h = 0
-        for i in range(0,len(heat_maps)):
-            avg_h+=heat_maps[i]
-        avg_h/=len(heat_maps)
-        
-    return heat_maps
+    print(test.testnumber)
+    filepath = os.getcwd().replace('wfire','') + test.filename
+    img,filename = readfile(filepath,True)
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+    heatmap = np.zeros((num_rows,num_cols))
+    frame_num = 0
+    print('threshold value: ',thresh)
+    for j in frames:
+        j = j.astype(float)
+        arr = (j-thresh)>0
+        heatmap+=arr
+        frame_num += 1
+        if frame_num > test.eof:
+            break
+    if save is True:
+        name = test.filename.replace('.tif','')
+        cwd = os.getcwd()
+        cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
+        if os.path.exists(cwd):
+            print('---------------------------------------------------------\nLooks like there\'s already a file with this name. Delete existing file if you are wanting to overwrite\n')
+            usr = input('Ok (press return)')
+            return
+        np.save(cwd,heatmap)
+    return None
 
 def displaymaps(heat_maps,start,stop):
     """...
