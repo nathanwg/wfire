@@ -781,7 +781,7 @@ def plot_igtime(sets,data,igtimes):
         unc,cap = calc_uncertainty(igtimes[i],10),4
         if showunc == False:
             unc,cap = 0,0
-        plt.errorbar(temperatures[i],igtimes_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap,label=labels[i])
+        plt.errorbar(temperatures[i],igtimes_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
     plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
     plt.ylabel('Average ignition time (s)')
     plt.title('Average ignition times')
