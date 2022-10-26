@@ -106,15 +106,13 @@ def show_frames(frames,foi,eof):
             cv.destroyAllWindows()
             break
 
-def show_ignition(testnums,data):
+def show_ignition(test):
     """.....
     """
-    for i in testnums:
-        test = data[int(i)-1]
-        file = os.getcwd().replace('wfire','') + test.filename
-        img = readfile(file,True)[0]
-        frames = img[1]
-        show_frames(frames,test.ignition_time[1],test.eof)
+    file = os.getcwd().replace('wfire','') + test.filename
+    img = readfile(file,True)[0]
+    frames = img[1]
+    show_frames(frames,test.ignition_time[1],test.eof)
 
 def get_heatmaps(test,save,thresh):
     """.....
@@ -144,29 +142,24 @@ def get_heatmaps(test,save,thresh):
         np.save(cwd,heatmap)
     return None
 
-def displaymaps(heat_maps,start,stop):
+def displaymaps(heatmap):
     """...
     """
-    start,stop = int(start),int(stop)
-    for i in range(start,stop+1):
-        if heat_maps is None:
-            input('Hello there')
-            return False
-        else:
-            heatmap = heat_maps[i-start]
-            usr = input('Continue (\'b\' to go back)')
-            if usr == 'b':
-                return False
-            num_rows = heatmap.shape[0]
-            calib = np.zeros((num_rows,1))
-            calib[0,0] = 4500
-            imgs = np.concatenate((heatmap,calib),axis=1)
-            plt.imshow(imgs,cmap='nipy_spectral_r')
-            ax = plt.gca()
-            ax.axes.xaxis.set_visible(False)
-            ax.axes.yaxis.set_visible(False)
-            plt.get_current_fig_manager().window.showMaximized()
-            plt.show()
+    usr = input('Continue (\'b\' to go back)')
+    if usr == 'b':
+        return 999
+    if heatmap == 0:
+        input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
+    num_rows = heatmap.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = 4500
+    imgs = np.concatenate((heatmap,calib),axis=1)
+    plt.imshow(imgs,cmap='nipy_spectral_r')
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    plt.get_current_fig_manager().window.showMaximized()
+    plt.show()
     return True
 
 def get_points(img,test,points_type):

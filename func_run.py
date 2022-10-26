@@ -10,7 +10,7 @@ def run_heatmap_g(sets,data):
     print(' This will generate heatmaps for the following sets:')
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
-    save = False
+    save = True
     usr = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b)')
     if usr == 'l':
         thresh = 35
@@ -29,31 +29,8 @@ def run_heatmap_d(sets,heat_maps,data):
     print(' This will display heatmaps for the following test numbers:')
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
-##    usr = input(' Would you like to display a custom set? (y/n/b)')
-##    if usr == 'y':
-##        sets = wf.change_tests()
-##    elif usr == 'n':
-##        print()
-##    elif usr == 'b':
-##        return
-##    os.system('cls')
-##    print('\n\n\n\n\n','--------------------------------------------------','\n')
-    usr = input( 'Would you like to display from current loaded data or saved data? (c/s/b)')
-    if usr == 'c':
-        if heat_maps is None:
-            print('There is no current loaded data')
-            input('')
-        else:
-            wf.displaymaps(heat_maps,sets[0],sets[-1])
-    elif usr == 's':
-        for i in range(0,len(sets),2):
-            tests = np.linspace(int(sets[i]),int(sets[i+1]),int(sets[i+1]-sets[i]+1))
-            heat_maps = wf.load_heatmaps(tests,data)
-            running = wf.displaymaps(heat_maps,sets[i],sets[i+1])
-            if running is False:
-                return
-    elif usr == 'b':
-        return
+
+    run_wffpa.loop_handl(sets,data,'displaymap',None)
     return
 
 def run_selectpoints_s(sets,data):

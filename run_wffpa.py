@@ -104,11 +104,7 @@ def run_plotprofiles(sets,data,distance,ylim):
     return
 
 def run_showignition(sets,data):
-    for i in range(0,len(sets),2):
-        tests = np.linspace(int(sets[i]),int(sets[i+1]),int(sets[i+1]-sets[i]+1))
-        run = wf.show_ignition(tests,data)
-        if run is False:
-            break
+    loop_handl(sets,data,'showig',None)
     return
 
 def run_flametimeline(sets,data):
@@ -312,6 +308,11 @@ def func_switch(test,tag,args):
         func_out = test.ignition_time[1]
     elif tag == 'getmap':
         func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0])
+    elif tag == 'displaymap':
+        heatmap = wf.load_heatmap(test)
+        func_out = wf.displaymaps(heatmap)
+    elif tag == 'showig':
+        wf.show_ignition(test)
     else:
         return func_out
     return func_out
