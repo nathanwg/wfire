@@ -1,3 +1,4 @@
+from asyncore import loop
 from cgi import test
 from cmath import nan
 from func_wfipa import readfile, get_image_properties
@@ -230,7 +231,7 @@ def run_validate(sets,data,distance):
         elif usr_func == 'i':
             run_showignition(sets,data)
         elif usr_func == 'g':
-            wf.creategrids(sets,data)
+            loop_handl(sets,data,'grid',None)
         elif usr_func == 'b':
             return
         else:
@@ -287,9 +288,9 @@ def func_switch(test,tag,args):
     if tag == 'ima':
         func_out = wf.get_ima(test)
     elif tag == 'area':
-        wf.get_max_flame_area(test)
+        func_out = wf.get_max_flame_area(test)
     elif tag == 'grid':
-        wf.creategrids(test)
+        func_out = wf.creategrids(test)
     elif tag == 'avgint':
         wf.calc_avgint(test,args)
     elif tag == 'timeline':

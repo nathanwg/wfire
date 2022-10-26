@@ -148,7 +148,7 @@ def displaymaps(heatmap):
     usr = input('Continue (\'b\' to go back)')
     if usr == 'b':
         return 999
-    if heatmap == 0:
+    if heatmap is None:
         input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
     num_rows = heatmap.shape[0]
     calib = np.zeros((num_rows,1))
@@ -234,7 +234,7 @@ def load_heatmap(test):
     if os.path.exists(path) is False:
         print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',test.testnumber,'\n')
         usr = input('Ok (press return)')
-        return 0
+        return None
     heatmap = np.load(path)
     return heatmap
 
@@ -345,7 +345,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
         for ii in range(0,num):
             test = data[int(tests[ii])-1]
             heatmap = load_heatmap(test)
-            if heatmap is 0:
+            if heatmap is None:
                 return
             num_cols = heatmap.shape[1]
             line = np.zeros((1,num_cols))
@@ -405,7 +405,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
         for ii in range(0,num):
             test = data[int(tests[ii])-1]
             heatmap = load_heatmap(test)
-            if heatmap is 0:
+            if heatmap is None:
                 return
             num_rows = heatmap.shape[0]
             pathname = test.filename.replace('.tif','')
@@ -566,7 +566,7 @@ def creategrids(test):
     if os.path.exists(pfilepath) is False:
         print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
         usr = input('Ok (press return)')
-        return
+        return 999
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = p[0],p[1],p[2],p[3]
     img = heatmap
@@ -648,6 +648,8 @@ def plotmedians(sets,data,medians_sets):
 
 def get_max_flame_area(test):
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
+    if x_left == None:
+        return 999
     file = os.getcwd().replace('wfire','') + test.filename
     img,filename = readfile(file,True)
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
@@ -716,7 +718,7 @@ def load_gridpoints(test):
     if os.path.exists(pfilepath) is False:
         print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
         usr = input('Ok (press return)')
-        return
+        return None,None,None,None
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = int(p[0]),int(p[1]+1),int(p[2]+1),int(p[3])
     return x_left,x_right,y_bot,y_top
