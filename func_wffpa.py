@@ -791,6 +791,9 @@ def plot_igtime(sets,data,igtimes):
     return
 
 def get_plotinfo(sets,data,pltype):
+    """ This function gets plot info and returns
+        to various plot functions
+    """
     labels,temperatures,linestyle = [],[],[]
     labeldried,labellive_m,labellive_i=False,False,False
     for i in range(0,len(sets),2):
