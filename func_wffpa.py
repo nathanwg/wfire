@@ -773,6 +773,8 @@ def plot_ima(sets,data,ima_sets):
     return
 
 def plot_igtime(sets,data,igtimes):
+    """ Plots ignition times for different sets of tests
+    """
     showunc = False
     labels,temperatures,linestyle = get_plotinfo(sets,data,'igtime') 
     igtimes_averages = []
@@ -792,7 +794,7 @@ def plot_igtime(sets,data,igtimes):
 
 def get_plotinfo(sets,data,pltype):
     """ This function gets plot info and returns
-        to various plot functions
+        to various plot functions.
     """
     labels,temperatures,linestyle = [],[],[]
     labeldried,labellive_m,labellive_i=False,False,False
