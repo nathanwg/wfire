@@ -630,7 +630,7 @@ def get_median(test):
 
 def plotmedians(sets,data,medians_sets):
     showunc = True
-    labels,temperatures,linestyle = get_plotinfo(sets,data,pltype)   
+    labels,temperatures,linestyle = get_plotinfo(sets,data)   
     median_averages = []
     for i in range(len(medians_sets)):           
         median_averages.append(np.mean(medians_sets[i]))
@@ -792,7 +792,7 @@ def plot_igtime(sets,data,igtimes):
     return
     return
 
-def get_plotinfo(sets,data,pltype):
+def get_plotinfo(sets,data):
     """ This function gets plot info and returns
         to various plot functions.
     """
