@@ -118,6 +118,12 @@ def get_heatmaps(test,save,thresh):
     """.....
     """
     print(test.testnumber)
+    name = test.filename.replace('.tif','')
+    cwd = os.getcwd()
+    cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
+    ischeck = checkfile(cwd,test,checktype=True)
+    if ischeck == False:
+        return
     filepath = os.getcwd().replace('wfire','') + test.filename
     img,filename = readfile(filepath,True)
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
@@ -132,13 +138,6 @@ def get_heatmaps(test,save,thresh):
         if frame_num > test.eof:
             break
     if save is True:
-        name = test.filename.replace('.tif','')
-        cwd = os.getcwd()
-        cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
-        if os.path.exists(cwd):
-            print('---------------------------------------------------------\nLooks like there\'s already a file with this name. Delete existing file if you are wanting to overwrite\n')
-            usr = input('Ok (press return)')
-            return
         np.save(cwd,heatmap)
     return None
 
@@ -231,9 +230,8 @@ def load_heatmap(test):
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
     path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
-    if os.path.exists(path) is False:
-        print('---------------------------------------------------------\nNo heatmap file exists for this test number\n',test.testnumber,'\n')
-        usr = input('Ok (press return)')
+    ischeck = checkfile(path,test,checktype=False)
+    if ischeck == False:
         return None
     heatmap = np.load(path)
     return heatmap
@@ -827,3 +825,21 @@ def get_plotinfo(sets,data):
                 labels.append('Live fuel-'+test.set_type[0])
                 labellive_i = True
     return labels,temperatures,linestyle
+
+def checkfile(filepath,test,checktype):
+    if checktype:
+        messg = '---------------------------------------------------------\
+            \nLooks like there\'s already a file with this name.\
+            \nDelete existing file if you are wanting to overwrite\n'
+    else:
+        messg = '---------------------------------------------------------\
+            \nLooks like you are missing the following file.\
+            \nPlease go back and generate this file before moving on.\n'
+    if os.path.exists(filepath) == checktype:
+        print(messg)
+        print('Filepath: ',filepath,'\nTest number: ',test.testnumber)
+        input('Ok (press return)')
+        return False
+    else:
+        return True
+    return
