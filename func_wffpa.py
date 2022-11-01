@@ -2,6 +2,7 @@ from cProfile import label
 from cgi import test
 from heapq import nsmallest
 from json import load
+from tabnanny import check
 from tkinter import E
 from cv2 import threshold
 import numpy as np
@@ -177,10 +178,8 @@ def get_points(img,test,points_type):
     elif points_type == 'grid':
         pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
         num_points = 2
-    if os.path.exists(pfilepath):
-        print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-        print(pfilepath)
-        usr = input('Ok (press return)')
+    ischeck = checkfile(pfilepath,test,checktype=True)
+    if ischeck == False:
         return 0,0,False
     num_rows = img.shape[0]
     calib = np.zeros((num_rows,1))
@@ -252,10 +251,8 @@ def save_points(test,p,num_points,points_type):
     else:
         input('Error (press \'Enter\' to return')
         return
-    if os.path.exists(pfilepath):
-        print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-        print(pfilepath)
-        usr = input('Ok (press return)')
+    ischeck = checkfile(pfilepath,test,checktype=True)
+    if ischeck == False:
         return
     pfile = open(pfilepath,'x')
     if points_type == 'profile':
@@ -277,9 +274,8 @@ def get_line_coordinates(test,d):
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
     path = cwd+'\\points\\'+pathname+'_points.txt'
-    if os.path.exists(path) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
-        usr = input('Ok (press return)')
+    ischeck = checkfile(path,test,checktype=False)
+    if ischeck == False:
         return 0
     p = np.loadtxt(path,unpack=True)
     L = d[1]+d[2]
@@ -409,9 +405,8 @@ def plotprofiles_v(sets,data,isnorm,xlim):
             pathname = test.filename.replace('.tif','')
             cwd = os.getcwd()
             path = cwd+'\\points_vert\\'+pathname+'_points_vert.txt'
-            if os.path.exists(path) is False:
-                print('---------------------------------------------------------\nNo points_vert file exists for this test number\n',tests[ii],'\n')
-                usr = input('Ok (press return)')
+            ischeck = checkfile(path,test,checktype=False)
+            if ischeck == False:
                 return
             p = np.loadtxt(path,unpack=True)
             x = round(p[0])
@@ -447,9 +442,8 @@ def change_ylim(ylim):
 def get_flametimeline(test):        
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
-    if os.path.exists(pfilepath) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
-        usr = input('Ok (press return)')
+    ischeck = checkfile(path,test,checktype=False)
+    if ischeck == False:
         return
     p = np.loadtxt(pfilepath,unpack=True)
     num_points = int(len(p)/2)
@@ -547,10 +541,8 @@ def calc_avgint(test,args):
     plt.ylabel('Normalized average flame intensity')
     plt.ylim(0,1)
     save_filepath = os.getcwd()+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
-    if os.path.exists(save_filepath):
-        print('---------------------------------------------------------\nLooks like there\'s already a file with this name.\nDelete existing file if you are wanting to overwrite\n')
-        print(save_filepath)
-        usr = input('Ok (press return)')
+    ischeck = checkfile(save_filepath,test,checktype=True)
+    if ischeck == False:
         return
     plt.savefig(save_filepath)
     plt.close()
@@ -561,9 +553,8 @@ def creategrids(test):
     heatmap = load_heatmap(test)
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-    if os.path.exists(pfilepath) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
-        usr = input('Ok (press return)')
+    ischeck = checkfile(pfilepath,test,checktype=False)
+    if ischeck == False:
         return 999
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = p[0],p[1],p[2],p[3]
@@ -607,6 +598,9 @@ def creategrids(test):
 def get_median(test):
     cwd = os.getcwd()
     filepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
+    ischeck = checkfile(filepath,test,checktype=False)
+    if ischeck == False:
+        return None
     data = np.loadtxt(filepath,unpack=True)
     data = np.abs(data)
     med_data = np.array(())
@@ -645,6 +639,11 @@ def plotmedians(sets,data,medians_sets):
     return
 
 def get_max_flame_area(test):
+    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+    afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
+    ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True),checkfile(afilepath,test,checktype=True)
+    if ischeck_m == False or ischeck_a == False:
+        return 999
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
     if x_left == None:
         return 999
@@ -684,8 +683,6 @@ def get_max_flame_area(test):
     print('Threshold: ',threshold)
     print('Total area: ',round(max_flame_area),' mm^2')
     # input()
-    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
-    afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
     np.save(mfilepath,m_frame)
     np.save(afilepath,[max_flame_area,frame_num])
     # plt.imshow(m_frame)
@@ -694,6 +691,9 @@ def get_max_flame_area(test):
 
 def get_ima(test):
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+    ischeck = checkfile(mfilepath,test,checktype=False)
+    if ischeck == False:
+        return 999
     m_frame = np.load(mfilepath)
     fmc = test.fmc
     if fmc == 0:
@@ -713,9 +713,8 @@ def get_ima(test):
 def load_gridpoints(test):
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-    if os.path.exists(pfilepath) is False:
-        print('---------------------------------------------------------\nNo points file exists for this test number\n',test.testnumber,'\n')
-        usr = input('Ok (press return)')
+    ischeck = checkfile(pfilepath,test,checktype=False)
+    if ischeck == False:
         return None,None,None,None
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = int(p[0]),int(p[1]+1),int(p[2]+1),int(p[3])
@@ -731,6 +730,9 @@ def calc_uncertainty(arr,n):
 
 def load_area(test):
     afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
+    ischeck = checkfile(afilepath,test,checktype=False)
+    if ischeck == False:
+        return 0,0
     vals = np.load(afilepath)
     max_flamearea,frame_num = vals[0]/(10**2),vals[1]
     return max_flamearea,frame_num
