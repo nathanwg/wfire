@@ -739,7 +739,7 @@ def load_area(test):
 
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
     showunc = False
-    labels,temperatures,linestyle = get_plotinfo(sets,data,'area') 
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
     area_averages = []
     for i in range(len(max_flamearea_sets)):           
         area_averages.append(np.mean(max_flamearea_sets[i]))
@@ -756,7 +756,7 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
 
 def plot_ima(sets,data,ima_sets):
     showunc = True
-    labels,temperatures,linestyle = get_plotinfo(sets,data,'ima') 
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
     ima_averages = []
     for i in range(len(ima_sets)):        
         ima_averages.append(np.mean(ima_sets[i]))
@@ -776,7 +776,7 @@ def plot_igtime(sets,data,igtimes):
     """ Plots ignition times for different sets of tests
     """
     showunc = False
-    labels,temperatures,linestyle = get_plotinfo(sets,data,'igtime') 
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
     igtimes_averages = []
     for i in range(len(igtimes)):        
         igtimes_averages.append(np.mean(igtimes[i]))
