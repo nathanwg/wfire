@@ -442,7 +442,7 @@ def change_ylim(ylim):
 def get_flametimeline(test):        
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
-    ischeck = checkfile(path,test,checktype=False)
+    ischeck = checkfile(pfilepath,test,checktype=False)
     if ischeck == False:
         return
     p = np.loadtxt(pfilepath,unpack=True)
