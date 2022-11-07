@@ -216,6 +216,7 @@ def run_validate(sets,data,distance):
         print(' Show line position -- n')
         print(' Show ignition ------- i')
         print(' Check grids --------- g')
+        print(' Area validation ----- a')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
         for i in range(0,len(sets),2):
@@ -232,10 +233,31 @@ def run_validate(sets,data,distance):
             run_showignition(sets,data)
         elif usr_func == 'g':
             loop_handl(sets,data,'grid',None)
+        elif usr_func == 'a':
+            run_validatearea(sets,data)
         elif usr_func == 'b':
             return
         else:
             error = True
+    return
+
+def run_validatearea(sets,data):
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------','\n')
+    print('Type option from the following list and hit enter:')
+    print(' Display max area -------------- m')
+    print(' Check frame number ------------ n')
+    print(' Calculate percent saturated --- s')
+    for i in range(0,len(sets),2):
+        print(round(sets[i]),'-',round(sets[i+1]))
+    print()
+    usr = input('Selected option: ')
+    if usr == 'm':
+        loop_handl(sets,data,'displayarea',None)
+    elif usr == 'n':
+        return
+    elif usr == 's':
+        return
     return
 
 def run_flamearea(sets,data):
@@ -314,6 +336,8 @@ def func_switch(test,tag,args):
         func_out = wf.displaymaps(heatmap)
     elif tag == 'showig':
         wf.show_ignition(test)
+    elif tag == 'displayarea':
+        wf.displayarea(test)
     else:
         return func_out
     return func_out

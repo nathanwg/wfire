@@ -845,3 +845,36 @@ def checkfile(filepath,test,checktype):
     else:
         return True
     return
+
+def displayarea(test):
+    frame_num = int(load_area(test)[1])
+    ffilepath = os.getcwd().replace('wfire','dis_area')+test.filename.replace('.tif','_aframe.npy')
+    ischeck = checkfile(ffilepath,test,checktype=False)
+    if ischeck == False:
+        fname = os.getcwd().replace('wfire','') + test.filename
+        img = readfile(fname,True)[0]
+        frames = get_image_properties(img)[0]
+        m_frame = frames[frame_num]
+        np.save(ffilepath,m_frame)
+    else:
+        m_frame = np.load(ffilepath)
+    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+    ischeck = checkfile(mfilepath,test,checktype=False)
+    if ischeck == False:
+        return 999
+    m_frame__ = np.load(mfilepath)
+    dis = np.concatenate((m_frame,m_frame__),axis=1)
+    print(frame_num)
+    num_rows = dis.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = 255
+    dis = np.concatenate((dis,calib),axis=1)
+    dis_bool = ((dis - 30)>=0)
+    dis_new = np.multiply(dis,dis_bool)
+    imgshow = np.concatenate((dis,dis_new),axis=0)
+    plt.get_current_fig_manager().window.showMaximized()
+    plt.imshow(imgshow,cmap='nipy_spectral_r')
+    plt.show(block=False)
+    plt.waitforbuttonpress()
+    plt.close()
+    return
