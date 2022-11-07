@@ -255,9 +255,9 @@ def run_validatearea(sets,data):
     if usr == 'm':
         loop_handl(sets,data,'displayarea',None)
     elif usr == 'n':
-        return
+        loop_handl(sets,data,'checkframenum',None)
     elif usr == 's':
-        return
+        loop_handl(sets,data,'satpercent',None)
     return
 
 def run_flamearea(sets,data):
@@ -338,6 +338,10 @@ def func_switch(test,tag,args):
         wf.show_ignition(test)
     elif tag == 'displayarea':
         wf.displayarea(test)
+    elif tag == 'checkframenum':
+        wf.checkframenum(test)
+    elif tag == 'satpercent':
+        wf.calc_saturate(test)
     else:
         return func_out
     return func_out

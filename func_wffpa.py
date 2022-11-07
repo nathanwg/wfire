@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 import keyboard
 import matplotlib.animation as animation
+import func_wfipa
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -737,6 +738,32 @@ def load_area(test):
     max_flamearea,frame_num = vals[0]/(10**2),vals[1]
     return max_flamearea,frame_num
 
+def load_areaframe(test):
+    ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
+    ischeck = checkfile(ffilepath,test,checktype=False)
+    if ischeck == False:
+        return None
+    frame = np.load(ffilepath)
+    return frame
+
+def calc_saturate(test):
+    if test.fmc == 0:
+        threshold = 50
+    else:
+        threshold = 35
+    frame = load_areaframe(test)
+    if frame is None:
+        return 999
+    frame_sat = ((frame-255)==0)
+    sat = frame_sat.sum()
+    frame_act = ((frame-threshold)>=0)
+    act = frame_act.sum()
+    sat_per = round(sat/act*100,1)
+    print('The percentage of the maximum flame area that is saturated is: ')
+    print(sat_per)
+    input()
+    return
+
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
     showunc = False
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
@@ -848,7 +875,7 @@ def checkfile(filepath,test,checktype):
 
 def displayarea(test):
     frame_num = int(load_area(test)[1])
-    ffilepath = os.getcwd().replace('wfire','dis_area')+test.filename.replace('.tif','_aframe.npy')
+    ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
     ischeck = checkfile(ffilepath,test,checktype=False)
     if ischeck == False:
         fname = os.getcwd().replace('wfire','') + test.filename
@@ -869,12 +896,55 @@ def displayarea(test):
     calib = np.zeros((num_rows,1))
     calib[0,0] = 255
     dis = np.concatenate((dis,calib),axis=1)
-    dis_bool = ((dis - 30)>=0)
+    dis_bool = ((dis - 35)>=0)
     dis_new = np.multiply(dis,dis_bool)
     imgshow = np.concatenate((dis,dis_new),axis=0)
-    plt.get_current_fig_manager().window.showMaximized()
     plt.imshow(imgshow,cmap='nipy_spectral_r')
+    plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
+    plt.get_current_fig_manager().window.showMaximized()
     plt.show(block=False)
     plt.waitforbuttonpress()
     plt.close()
     return
+
+def checkframenum(test):
+    frame_num_calc = load_area(test)[1]
+    if test.fmc == 0:
+        threshold = 50
+    else:
+        threshold = 35
+    fname = os.getcwd().replace('wfire','') + test.filename
+    numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
+    ind = np.where(numpixels==numpixels.max())[0]
+    os.system('cls')
+    print('Max area calculated without a rectangle being removed\n to represent the sample area is at frame number:')
+    for i in ind:
+        print(i)
+    print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
+    print(frame_num_calc)
+    usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
+    if usr == 'q':
+        return
+    else:
+        comp_frames(frames,[frame_num_calc,ind])
+    return
+
+def comp_frames(frames,indices):
+    img = frames[int(indices[0])]
+    for i in indices[1]:
+        img = np.concatenate((img,frames[int(i)]),axis=1)
+    num_rows = img.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = 255
+    img = np.concatenate((img,calib),axis=1)
+    img_bool = ((img - 35)>=0)
+    img_new = np.multiply(img,img_bool)
+    imgshow = np.concatenate((img,img_new),axis=0)
+    plt.imshow(imgshow,cmap='nipy_spectral_r')
+    plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
+    print('Left-most image is with a rectangle being removed')
+    plt.show(block=False)
+    plt.waitforbuttonpress()
+    plt.close()
+    return
+
