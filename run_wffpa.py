@@ -337,11 +337,11 @@ def func_switch(test,tag,args):
     elif tag == 'showig':
         wf.show_ignition(test)
     elif tag == 'displayarea':
-        wf.displayarea(test)
+        func_out = wf.displayarea(test)
     elif tag == 'checkframenum':
-        wf.checkframenum(test)
+        func_out = wf.checkframenum(test)
     elif tag == 'satpercent':
-        wf.calc_saturate(test)
+        func_out = wf.calc_saturate(test)
     else:
         return func_out
     return func_out

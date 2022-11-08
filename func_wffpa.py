@@ -123,7 +123,7 @@ def get_heatmaps(test,save,thresh):
     name = test.filename.replace('.tif','')
     cwd = os.getcwd()
     cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
-    ischeck = checkfile(cwd,test,checktype=True)
+    ischeck = checkfile(cwd,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     filepath = os.getcwd().replace('wfire','') + test.filename
@@ -179,7 +179,7 @@ def get_points(img,test,points_type):
     elif points_type == 'grid':
         pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
         num_points = 2
-    ischeck = checkfile(pfilepath,test,checktype=True)
+    ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
     num_rows = img.shape[0]
@@ -230,7 +230,7 @@ def load_heatmap(test):
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
     path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
-    ischeck = checkfile(path,test,checktype=False)
+    ischeck = checkfile(path,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
     heatmap = np.load(path)
@@ -252,7 +252,7 @@ def save_points(test,p,num_points,points_type):
     else:
         input('Error (press \'Enter\' to return')
         return
-    ischeck = checkfile(pfilepath,test,checktype=True)
+    ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     pfile = open(pfilepath,'x')
@@ -275,7 +275,7 @@ def get_line_coordinates(test,d):
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
     path = cwd+'\\points\\'+pathname+'_points.txt'
-    ischeck = checkfile(path,test,checktype=False)
+    ischeck = checkfile(path,test,checktype=False,isinput=True)
     if ischeck == False:
         return 0
     p = np.loadtxt(path,unpack=True)
@@ -406,7 +406,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
             pathname = test.filename.replace('.tif','')
             cwd = os.getcwd()
             path = cwd+'\\points_vert\\'+pathname+'_points_vert.txt'
-            ischeck = checkfile(path,test,checktype=False)
+            ischeck = checkfile(path,test,checktype=False,isinput=True)
             if ischeck == False:
                 return
             p = np.loadtxt(path,unpack=True)
@@ -443,7 +443,7 @@ def change_ylim(ylim):
 def get_flametimeline(test):        
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_timeline\\'+test.filename.replace('.tif','')+'_points_timeline.txt'
-    ischeck = checkfile(pfilepath,test,checktype=False)
+    ischeck = checkfile(pfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return
     p = np.loadtxt(pfilepath,unpack=True)
@@ -542,7 +542,7 @@ def calc_avgint(test,args):
     plt.ylabel('Normalized average flame intensity')
     plt.ylim(0,1)
     save_filepath = os.getcwd()+'\\plots_avgint\\'+test.filename.replace('.tif','')+'_avgint.png'
-    ischeck = checkfile(save_filepath,test,checktype=True)
+    ischeck = checkfile(save_filepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     plt.savefig(save_filepath)
@@ -554,7 +554,7 @@ def creategrids(test):
     heatmap = load_heatmap(test)
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-    ischeck = checkfile(pfilepath,test,checktype=False)
+    ischeck = checkfile(pfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return 999
     p = np.loadtxt(pfilepath)
@@ -599,7 +599,7 @@ def creategrids(test):
 def get_median(test):
     cwd = os.getcwd()
     filepath = cwd+'\\data_timeline\\'+test.filename.replace('.tif','')+'_timeline.txt'
-    ischeck = checkfile(filepath,test,checktype=False)
+    ischeck = checkfile(filepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
     data = np.loadtxt(filepath,unpack=True)
@@ -642,7 +642,7 @@ def plotmedians(sets,data,medians_sets):
 def get_max_flame_area(test):
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
     afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
-    ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True),checkfile(afilepath,test,checktype=True)
+    ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True,isinput=True),checkfile(afilepath,test,checktype=True,isinput=True)
     if ischeck_m == False or ischeck_a == False:
         return 999
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
@@ -660,7 +660,7 @@ def get_max_flame_area(test):
     max_flame_area,m_frame = 0,0
     pixel_length = test.spatial_calibration
     npf = 0
-    for k in range(num_frames):
+    for k in range(num_frames-1):
         ref_frame = frames[k]
         ref_frame = ref_frame.astype(float) # Change to float to handle subtraction correctly
         ref_frame[y_top:y_bot,x_left:x_right] = 0
@@ -692,7 +692,7 @@ def get_max_flame_area(test):
 
 def get_ima(test):
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
-    ischeck = checkfile(mfilepath,test,checktype=False)
+    ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return 999
     m_frame = np.load(mfilepath)
@@ -714,7 +714,7 @@ def get_ima(test):
 def load_gridpoints(test):
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-    ischeck = checkfile(pfilepath,test,checktype=False)
+    ischeck = checkfile(pfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None,None,None,None
     p = np.loadtxt(pfilepath)
@@ -731,16 +731,16 @@ def calc_uncertainty(arr,n):
 
 def load_area(test):
     afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
-    ischeck = checkfile(afilepath,test,checktype=False)
+    ischeck = checkfile(afilepath,test,checktype=False,isinput=True)
     if ischeck == False:
-        return 0,0
+        return None,None
     vals = np.load(afilepath)
     max_flamearea,frame_num = vals[0]/(10**2),vals[1]
     return max_flamearea,frame_num
 
 def load_areaframe(test):
     ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
-    ischeck = checkfile(ffilepath,test,checktype=False)
+    ischeck = checkfile(ffilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
     frame = np.load(ffilepath)
@@ -759,9 +759,13 @@ def calc_saturate(test):
     frame_act = ((frame-threshold)>=0)
     act = frame_act.sum()
     sat_per = round(sat/act*100,1)
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------')
     print('The percentage of the maximum flame area that is saturated is: ')
     print(sat_per)
-    input()
+    usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
+    if usr == 'q':
+        return 999
     return
 
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
@@ -855,7 +859,7 @@ def get_plotinfo(sets,data):
                 labellive_i = True
     return labels,temperatures,linestyle
 
-def checkfile(filepath,test,checktype):
+def checkfile(filepath,test,checktype,isinput):
     if checktype:
         messg = '---------------------------------------------------------\
             \nLooks like there\'s already a file with this name.\
@@ -865,46 +869,67 @@ def checkfile(filepath,test,checktype):
             \nLooks like you are missing the following file.\
             \nPlease go back and generate this file before moving on.\n'
     if os.path.exists(filepath) == checktype:
-        print(messg)
-        print('Filepath: ',filepath,'\nTest number: ',test.testnumber)
-        input('Ok (press return)')
+        os.system('cls')
+        print('\n\n\n\n\n')
+        if isinput:
+            print(messg)
+            print('Filepath: ',filepath,'\nTest number: ',test.testnumber)
+            input('Ok (press return)')
+        else:
+            print('-----------------------------------------------')
+            print('Filepath: ',filepath,'\nTest number: ',test.testnumber)
         return False
     else:
         return True
     return
 
 def displayarea(test):
-    frame_num = int(load_area(test)[1])
+    show = True
+    if test.fmc == 0:
+        threshold = 50
+    else:
+        threshold = 35
+    frame_num = load_area(test)[1]
+    if frame_num is None:
+        return 999
     ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
-    ischeck = checkfile(ffilepath,test,checktype=False)
+    ischeck = checkfile(ffilepath,test,checktype=False,isinput=False)
     if ischeck == False:
         fname = os.getcwd().replace('wfire','') + test.filename
         img = readfile(fname,True)[0]
         frames = get_image_properties(img)[0]
-        m_frame = frames[frame_num]
+        m_frame = frames[int(frame_num)]
         np.save(ffilepath,m_frame)
+        show = False
     else:
         m_frame = np.load(ffilepath)
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
-    ischeck = checkfile(mfilepath,test,checktype=False)
+    ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return 999
     m_frame__ = np.load(mfilepath)
     dis = np.concatenate((m_frame,m_frame__),axis=1)
-    print(frame_num)
     num_rows = dis.shape[0]
     calib = np.zeros((num_rows,1))
     calib[0,0] = 255
     dis = np.concatenate((dis,calib),axis=1)
-    dis_bool = ((dis - 35)>=0)
+    dis_bool = ((dis - threshold)>=0)
     dis_new = np.multiply(dis,dis_bool)
     imgshow = np.concatenate((dis,dis_new),axis=0)
-    plt.imshow(imgshow,cmap='nipy_spectral_r')
-    plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
-    plt.get_current_fig_manager().window.showMaximized()
-    plt.show(block=False)
-    plt.waitforbuttonpress()
-    plt.close()
+    if show:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------')
+        usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
+        if usr == 'q':
+            return 999
+        plt.imshow(imgshow,cmap='nipy_spectral_r')
+        title = 'Test number: '+str(int(test.testnumber))
+        plt.title(title)
+        plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
+        plt.get_current_fig_manager().window.showMaximized()
+        plt.show(block=False)
+        plt.waitforbuttonpress()
+        plt.close()
     return
 
 def checkframenum(test):
