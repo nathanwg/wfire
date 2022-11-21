@@ -883,7 +883,7 @@ def checkfile(filepath,test,checktype,isinput):
         return True
     return
 
-def displayarea(test):
+def displayarea(test,cmap_usr):
     show = True
     if test.fmc == 0:
         threshold = 50
@@ -922,7 +922,7 @@ def displayarea(test):
         usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
         if usr == 'q':
             return 999
-        plt.imshow(imgshow,cmap='nipy_spectral_r')
+        plt.imshow(imgshow,cmap=cmap_usr)
         title = 'Test number: '+str(int(test.testnumber))
         plt.title(title)
         plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
@@ -932,7 +932,7 @@ def displayarea(test):
         plt.close()
     return
 
-def checkframenum(test):
+def checkframenum(test,cmap_usr):
     frame_num_calc = load_area(test)[1]
     if test.fmc == 0:
         threshold = 50
@@ -951,10 +951,10 @@ def checkframenum(test):
     if usr == 'q':
         return
     else:
-        comp_frames(frames,[frame_num_calc,ind])
+        comp_frames(frames,[frame_num_calc,ind],cmap_usr)
     return
 
-def comp_frames(frames,indices):
+def comp_frames(frames,indices,cmap_usr):
     img = frames[int(indices[0])]
     for i in indices[1]:
         img = np.concatenate((img,frames[int(i)]),axis=1)
@@ -965,11 +965,35 @@ def comp_frames(frames,indices):
     img_bool = ((img - 35)>=0)
     img_new = np.multiply(img,img_bool)
     imgshow = np.concatenate((img,img_new),axis=0)
-    plt.imshow(imgshow,cmap='nipy_spectral_r')
+    plt.imshow(imgshow,cmap=cmap_usr)
     plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
     print('Left-most image is with a rectangle being removed')
     plt.show(block=False)
     plt.waitforbuttonpress()
     plt.close()
     return
+
+def change_cmap(cmap):
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------','\n')
+    print('Current colormap is: ',cmap)
+    print('Choose one of the following maps (hit enter for no change)')
+    print(' 1 - viridis')
+    print(' 2 - twilight')
+    print(' 3 - turbo')
+    print(' 4 - CMRmap')
+    print(' 5 - flag')
+    print(' 6 - gist_ncar')
+    print(' 7 - nipy_spectral_r')
+    print(' 8 - tab20')
+    print(' 9 - Set3')
+    print(' 10 - turbo')
+    usr = input('Selected option: ')
+    if usr == '':
+        return cmap
+    usr = int(usr)
+    if usr < 1 or usr > 10:
+        return cmap
+    cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','turbo']
+    return cmaps[usr-1]
 

@@ -56,12 +56,13 @@ def run_linedisplay(sets,data,distance):
             running = False
     return
 
-def run_changeparameters(distance,sets,filename,ylim):
+def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print(' Change test numbers ---- n')
     print(' Change line parameters - p')
     print(' Change plot ylimit ----- y')
+    print(' Change cmap ------------ c')
     print(' Go back ---------------- b')
     usr = input('Selected option: ')
     if usr == 'n':
@@ -70,6 +71,8 @@ def run_changeparameters(distance,sets,filename,ylim):
         distance = wf.change_linepar(distance)
     elif usr == 'y':
         ylim = wf.change_ylim(ylim)
+    elif usr == 'c':
+        cmap = wf.change_cmap(cmap)
     elif usr == 'b':
         return distance,sets,ylim
     else:
@@ -85,7 +88,9 @@ def run_changeparameters(distance,sets,filename,ylim):
     file.write(' ')
     file.write(str(ylim))
     file.close()
-    return distance,sets,ylim
+    np.save(cmap_filepath,cmap)
+
+    return distance,sets,ylim,cmap
 
 def run_plotprofiles(sets,data,distance,ylim):
     os.system('cls')
@@ -207,7 +212,7 @@ def run_tools(sets,data):
             error = True
     return
 
-def run_validate(sets,data,distance):
+def run_validate(sets,data,distance,cmap):
     running,error = True, False
     while running is True:
         os.system('cls')
@@ -234,14 +239,14 @@ def run_validate(sets,data,distance):
         elif usr_func == 'g':
             loop_handl(sets,data,'grid',None)
         elif usr_func == 'a':
-            run_validatearea(sets,data)
+            run_validatearea(sets,data,cmap)
         elif usr_func == 'b':
             return
         else:
             error = True
     return
 
-def run_validatearea(sets,data):
+def run_validatearea(sets,data,cmap):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print('Type option from the following list and hit enter:')
@@ -253,9 +258,9 @@ def run_validatearea(sets,data):
     print()
     usr = input('Selected option: ')
     if usr == 'm':
-        loop_handl(sets,data,'displayarea',None)
+        loop_handl(sets,data,'displayarea',args=[cmap])
     elif usr == 'n':
-        loop_handl(sets,data,'checkframenum',None)
+        loop_handl(sets,data,'checkframenum',args=[cmap])
     elif usr == 's':
         loop_handl(sets,data,'satpercent',None)
     return
@@ -337,9 +342,9 @@ def func_switch(test,tag,args):
     elif tag == 'showig':
         wf.show_ignition(test)
     elif tag == 'displayarea':
-        func_out = wf.displayarea(test)
+        func_out = wf.displayarea(test,cmap_usr=args[0])
     elif tag == 'checkframenum':
-        func_out = wf.checkframenum(test)
+        func_out = wf.checkframenum(test,cmap_usr=args[0])
     elif tag == 'satpercent':
         func_out = wf.calc_saturate(test)
     else:
@@ -356,6 +361,8 @@ def main():
         sets.append(cache[i])
     distance = [cache[-4],cache[-3],cache[-2]]
     ylim = float(cache[-1])
+    cmap_filepath = os.getcwd() + '_cache\\cmap.npy'
+    cmap = str(np.load(cmap_filepath))
     running,error = True, False
     while running is True:
         os.system('cls')
@@ -365,8 +372,8 @@ def main():
         print('Type option from the following list and hit enter:','\n')
         print('  Data Analysis Tools ------------ T')
         print('  Create Analysis Plots ---------- P')
-        print('  Change Analysis Parameters ----- C')
         print('  Data Analysis Validation ------- V')
+        print('  Settings ----------------------- S')
         print('  Quit Program ------------------- Q','\n')
         print(' The following test numbers are being considered:')
         sets_list = ''
@@ -385,11 +392,11 @@ def main():
             run_tools(sets,data)
         elif usr_func == 'p' or usr_func == 'P':
             run_createplots(sets,data,distance,ylim)
-        elif usr_func == 'c' or usr_func == 'C':
-            distance,sets,ylim = run_changeparameters(distance,sets,filename,ylim)
+        elif usr_func == 's' or usr_func == 'S':
+            distance,sets,ylim,cmap = run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath)
             ylim = float(ylim)
         elif usr_func == 'v' or usr_func == 'V':
-            run_validate(sets,data,distance)
+            run_validate(sets,data,distance,cmap)
         elif usr_func == 'q' or usr_func == 'Q':
             running = False
         else:
