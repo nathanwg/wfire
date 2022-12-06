@@ -148,7 +148,7 @@ def displaymaps(heatmap):
     """
     usr = input('Continue (\'b\' to go back)')
     if usr == 'b':
-        return 999
+        return None
     if heatmap is None:
         input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
     num_rows = heatmap.shape[0]
@@ -556,7 +556,7 @@ def creategrids(test):
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
     ischeck = checkfile(pfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
-        return 999
+        return None
     p = np.loadtxt(pfilepath)
     x_left,x_right,y_bot,y_top = p[0],p[1],p[2],p[3]
     img = heatmap
@@ -644,10 +644,13 @@ def get_max_flame_area(test):
     afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
     ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True,isinput=True),checkfile(afilepath,test,checktype=True,isinput=True)
     if ischeck_m == False or ischeck_a == False:
-        return 999
+        usr = input('Continue? (y/n) ')
+        if usr == 'n':
+            return None
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
     if x_left == None:
-        return 999
+        input('failed grid')
+        return None
     file = os.getcwd().replace('wfire','') + test.filename
     img,filename = readfile(file,True)
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
@@ -676,25 +679,19 @@ def get_max_flame_area(test):
             npf = numpixels_frame
             frame_num = k
 
-    # for k in range(num_cols):
-    #     for m in range(num_rows):
-    #         if m_frame[m,k] > threshold:
-    #             m_frame[m,k] = 255
     print('Numpixels_frame: ',npf,'\n','Pixel_area: ',pixel_area)
     print('Threshold: ',threshold)
     print('Total area: ',round(max_flame_area),' mm^2')
-    # input()
     np.save(mfilepath,m_frame)
     np.save(afilepath,[max_flame_area,frame_num])
-    # plt.imshow(m_frame)
-    # plt.show()
-                
+    # input('Made it to the end of the function')
+    return True                
 
 def get_ima(test):
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
     ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
-        return 999
+        return None
     m_frame = np.load(mfilepath)
     fmc = test.fmc
     if fmc == 0:
@@ -753,7 +750,7 @@ def calc_saturate(test):
         threshold = 35
     frame = load_areaframe(test)
     if frame is None:
-        return 999
+        return None
     frame_sat = ((frame-255)==0)
     sat = frame_sat.sum()
     frame_act = ((frame-threshold)>=0)
@@ -765,12 +762,18 @@ def calc_saturate(test):
     print(sat_per)
     usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
     if usr == 'q':
-        return 999
+        return None
     return
 
 def plot_max_flame_area(sets,data,max_flamearea_sets):  
     showunc = False
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    if False:
+        usr = input('Please input a secondary label for the plot: ')
+        labels[-1] = usr
+        start,stop = int(len(linestyle)/2),int(len(linestyle))
+        for i in range(start,stop):
+            linestyle[i] = 'ro'
     area_averages = []
     for i in range(len(max_flamearea_sets)):           
         area_averages.append(np.mean(max_flamearea_sets[i]))
@@ -786,8 +789,14 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
     return
 
 def plot_ima(sets,data,ima_sets):
-    showunc = True
-    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    showunc = False
+    labels,temperatures,linestyle = get_plotinfo(sets,data)
+    if False:
+        usr = input('Please input a secondary label for the plot: ')
+        labels[-1] = usr
+        start,stop = int(len(linestyle)/2),int(len(linestyle))
+        for i in range(start,stop):
+            linestyle[i] = 'ro'
     ima_averages = []
     for i in range(len(ima_sets)):        
         ima_averages.append(np.mean(ima_sets[i]))
@@ -806,8 +815,14 @@ def plot_ima(sets,data,ima_sets):
 def plot_igtime(sets,data,igtimes):
     """ Plots ignition times for different sets of tests
     """
-    showunc = False
-    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    showunc = True
+    labels,temperatures,linestyle = get_plotinfo(sets,data)
+    if True:
+        usr = input('Please input a secondary label for the plot: ')
+        labels[-1] = usr
+        start,stop = int(len(linestyle)/2),int(len(linestyle))
+        for i in range(start,stop):
+            linestyle[i] = 'ro'
     igtimes_averages = []
     for i in range(len(igtimes)):        
         igtimes_averages.append(np.mean(igtimes[i]))
@@ -820,7 +835,6 @@ def plot_igtime(sets,data,igtimes):
     plt.title('Average ignition times')
     plt.legend()
     plt.show()
-    return
     return
 
 def get_plotinfo(sets,data):
@@ -890,8 +904,8 @@ def displayarea(test):
     else:
         threshold = 35
     frame_num = load_area(test)[1]
-    if frame_num is None:
-        return 999
+    if frame_num == None:
+        return None
     ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
     ischeck = checkfile(ffilepath,test,checktype=False,isinput=False)
     if ischeck == False:
@@ -906,7 +920,7 @@ def displayarea(test):
     mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
     ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
-        return 999
+        return None
     m_frame__ = np.load(mfilepath)
     dis = np.concatenate((m_frame,m_frame__),axis=1)
     num_rows = dis.shape[0]
@@ -921,7 +935,7 @@ def displayarea(test):
         print('\n\n\n\n\n','--------------------------------------------------')
         usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
         if usr == 'q':
-            return 999
+            return None
         plt.imshow(imgshow,cmap='nipy_spectral_r')
         title = 'Test number: '+str(int(test.testnumber))
         plt.title(title)
@@ -934,6 +948,8 @@ def displayarea(test):
 
 def checkframenum(test):
     frame_num_calc = load_area(test)[1]
+    if frame_num_calc is None:
+        return None
     if test.fmc == 0:
         threshold = 50
     else:

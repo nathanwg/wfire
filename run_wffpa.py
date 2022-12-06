@@ -280,6 +280,8 @@ def run_flamearea(sets,data):
 
 def run_plot_max_flame_area(sets,data):
     max_flame_area_sets = loop_handl(sets,data,'pltarea',None)
+    if len(max_flame_area_sets) == 0:
+        return
     wf.plot_max_flame_area(sets,data,max_flame_area_sets)
 
 def run_plot_ima(sets,data):
@@ -300,13 +302,13 @@ def loop_handl(sets,data,tag,args):
             num = int(tests[j])-1
             test = data[num]
             switch_out.append(func_switch(test,tag,args))
-            if switch_out[j] == 999:
+            if switch_out[j] is None:
                 return outputs
         outputs.append(switch_out)
     return outputs
 
 def func_switch(test,tag,args):
-    func_out = None
+    func_out = True
     if tag == 'ima':
         func_out = wf.get_ima(test)
     elif tag == 'area':
