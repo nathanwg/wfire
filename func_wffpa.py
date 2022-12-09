@@ -640,8 +640,8 @@ def plotmedians(sets,data,medians_sets):
     return
 
 def get_max_flame_area(test):
-    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
-    afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
+    afilepath = os.getcwd()+'_cache\\flame_area\\vals\\'+test.filename.replace('.tif','_area_vals.npy')
+    mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
     ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True,isinput=True),checkfile(afilepath,test,checktype=True,isinput=True)
     if ischeck_m == False or ischeck_a == False:
         return 999
@@ -691,7 +691,7 @@ def get_max_flame_area(test):
                 
 
 def get_ima(test):
-    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+    mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
     ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return 999
@@ -730,7 +730,7 @@ def calc_uncertainty(arr,n):
     return unc
 
 def load_area(test):
-    afilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea.npy'
+    afilepath = os.getcwd()+'_cache\\flame_area\\vals\\'+test.filename.replace('.tif','_area_vals.npy')
     ischeck = checkfile(afilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None,None
@@ -739,7 +739,7 @@ def load_area(test):
     return max_flamearea,frame_num
 
 def load_areaframe(test):
-    ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
+    ffilepath = os.getcwd().replace('wfire','wfire_cache\\flame_area\\frames\\')+test.filename.replace('.tif','_areaframe_uncropped.npy')
     ischeck = checkfile(ffilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
@@ -892,7 +892,7 @@ def displayarea(test,cmap_usr):
     frame_num = load_area(test)[1]
     if frame_num is None:
         return 999
-    ffilepath = os.getcwd().replace('wfire','wfire_cache\\dis_area\\')+test.filename.replace('.tif','_aframe.npy')
+    ffilepath = os.getcwd().replace('wfire','wfire_cache\\flame_area\\frames\\')+test.filename.replace('.tif','_areaframe_uncropped.npy')
     ischeck = checkfile(ffilepath,test,checktype=False,isinput=False)
     if ischeck == False:
         fname = os.getcwd().replace('wfire','') + test.filename
@@ -903,7 +903,7 @@ def displayarea(test,cmap_usr):
         show = False
     else:
         m_frame = np.load(ffilepath)
-    mfilepath = os.getcwd()+'\\flamearea\\'+test.filename.replace('.tif','')+'_flamearea_frame.npy'
+    mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
     ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return 999
@@ -933,31 +933,45 @@ def displayarea(test,cmap_usr):
     return
 
 def checkframenum(test,cmap_usr):
-    frame_num_calc = load_area(test)[1]
+    frame_num_cropped = load_area(test)[1]
     if test.fmc == 0:
         threshold = 50
     else:
         threshold = 35
-    fname = os.getcwd().replace('wfire','') + test.filename
-    numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
-    ind = np.where(numpixels==numpixels.max())[0]
+    numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
+    areaframe_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
+    areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
+    ischeck = checkfile(numpixels_filepath,test,checktype=False,isinput=False)
+    if ischeck == False:
+        fname = os.getcwd().replace('wfire','') + test.filename
+        numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
+        ind = np.where(numpixels==numpixels.max())[0]
+        
+        img = frames[int(frame_num_cropped)]
+        for i in ind:
+            img = np.concatenate((img,frames[int(i)]),axis=1)
+
+        np.save(numpixels_filepath,numpixels)
+        np.save(areaframe_numpixels_filepath,img)
+        np.save(areavals_numpixels_filepath,ind)
+    else:
+        areaframe_numpixels = np.load(areaframe_numpixels_filepath)
+        img = areaframe_numpixels
+        ind = np.load(areavals_numpixels_filepath)
     os.system('cls')
     print('Max area calculated without a rectangle being removed\n to represent the sample area is at frame number:')
     for i in ind:
         print(i)
     print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
-    print(frame_num_calc)
+    print(frame_num_cropped)
     usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
     if usr == 'q':
         return
     else:
-        comp_frames(frames,[frame_num_calc,ind],cmap_usr)
+        comp_frames(img,cmap_usr)
     return
 
-def comp_frames(frames,indices,cmap_usr):
-    img = frames[int(indices[0])]
-    for i in indices[1]:
-        img = np.concatenate((img,frames[int(i)]),axis=1)
+def comp_frames(img,cmap_usr):
     num_rows = img.shape[0]
     calib = np.zeros((num_rows,1))
     calib[0,0] = 255
