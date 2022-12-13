@@ -247,22 +247,33 @@ def run_validate(sets,data,distance,cmap):
     return
 
 def run_validatearea(sets,data,cmap):
-    os.system('cls')
-    print('\n\n\n\n\n','--------------------------------------------------','\n')
-    print('Type option from the following list and hit enter:')
-    print(' Display max area -------------- m')
-    print(' Check frame number ------------ n')
-    print(' Calculate percent saturated --- s')
-    for i in range(0,len(sets),2):
-        print(round(sets[i]),'-',round(sets[i+1]))
-    print()
-    usr = input('Selected option: ')
-    if usr == 'm':
-        loop_handl(sets,data,'displayarea',args=[cmap])
-    elif usr == 'n':
-        loop_handl(sets,data,'checkframenum',args=[cmap])
-    elif usr == 's':
-        loop_handl(sets,data,'satpercent',None)
+    running,error = True,False
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Type option from the following list and hit enter:')
+        print(' Display max area -------------- m')
+        print(' Check frame number ------------ n')
+        print(' Calculate percent saturated --- s')
+        print(' Go back ----------------------- b')
+        for i in range(0,len(sets),2):
+            print(round(sets[i]),'-',round(sets[i+1]))
+        print()
+        if error is True:
+            print('Error -- selected invalid option')
+            error = False
+            print()
+        usr = input('Selected option: ')
+        if usr == 'm':
+            loop_handl(sets,data,'displayarea',args=[cmap])
+        elif usr == 'n':
+            loop_handl(sets,data,'checkframenum',args=[cmap])
+        elif usr == 's':
+            loop_handl(sets,data,'satpercent',None)
+        elif usr == 'b':
+            running = False
+        else:
+            error = True
     return
 
 def run_flamearea(sets,data):
