@@ -983,8 +983,9 @@ def comp_frames(img,cmap_usr):
     plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
     print('Left-most image is with a rectangle being removed')
     plt.show(block=False)
-    plt.waitforbuttonpress()
-    plt.close()
+    state = plt.waitforbuttonpress()
+    if state == False or state == True:
+        plt.close()
     return
 
 def change_cmap(cmap):
@@ -1011,3 +1012,23 @@ def change_cmap(cmap):
     cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','turbo']
     return cmaps[usr-1]
 
+def plot_numpixelsarea(test):
+    numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
+    areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
+
+    ischeck = checkfile(numpixels_filepath,test,checktype=False,isinput=True)
+    if ischeck == False:
+        return None
+    numpixels = np.load(numpixels_filepath)
+    num_frames = len(numpixels)
+    x = np.linspace(1,num_frames,num_frames)
+    frame_num_cropped = load_area(test)[1]
+    frame_num_numpixels = np.load(areavals_numpixels_filepath)
+    x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(numpixels)]
+    x_n = [frame_num_numpixels,frame_num_numpixels]
+
+    plt.plot(x,numpixels,linewidth=0.5)
+    plt.plot(x_c,y)
+    plt.plot(x_n,y)
+    plt.show()
+    
