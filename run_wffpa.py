@@ -56,13 +56,14 @@ def run_linedisplay(sets,data,distance):
             running = False
     return
 
-def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath):
+def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath,showunc):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print(' Change test numbers ---- n')
     print(' Change line parameters - p')
     print(' Change plot ylimit ----- y')
     print(' Change cmap ------------ c')
+    print(' Error bars ------------- e')
     print(' Go back ---------------- b')
     usr = input('Selected option: ')
     if usr == 'n':
@@ -73,6 +74,8 @@ def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath):
         ylim = wf.change_ylim(ylim)
     elif usr == 'c':
         cmap = wf.change_cmap(cmap)
+    elif usr == 'e':
+        showunc = wf.change_errbar(showunc)
     elif usr == 'b':
         return distance,sets,ylim
     else:
@@ -87,10 +90,12 @@ def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath):
         file.write(str(distance[i]))
     file.write(' ')
     file.write(str(ylim))
+    file.write(' ')
+    file.write(str(showunc))
     file.close()
     np.save(cmap_filepath,cmap)
 
-    return distance,sets,ylim,cmap
+    return distance,sets,ylim,cmap,bool(showunc)
 
 def run_plotprofiles(sets,data,distance,ylim):
     os.system('cls')
@@ -126,7 +131,7 @@ def run_flametimeline(sets,data):
         return
     return
 
-def run_createplots(sets,data,distance,ylim):
+def run_createplots(sets,data,distance,ylim,showunc):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print('Type option from the following list and hit enter:')
@@ -143,7 +148,7 @@ def run_createplots(sets,data,distance,ylim):
     elif usr == 't':
         run_flametimeline(sets,data)
     elif usr == 'i':
-        run_plotigtime(sets,data)
+        run_plotigtime(sets,data,showunc)
     elif usr == 'a':
         ans = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b)')
         if ans == 'l':
@@ -154,20 +159,20 @@ def run_createplots(sets,data,distance,ylim):
             return
         wf.calc_avgint(sets,data,threshold)
     elif usr == 'm':
-        run_plotmedians(sets,data)
+        run_plotmedians(sets,data,showunc)
     elif usr == 'r':
-        run_plot_max_flame_area(sets,data)
+        run_plot_max_flame_area(sets,data,showunc)
     elif usr == 's':
-        run_plot_ima(sets,data)
+        run_plot_ima(sets,data,showunc)
     else:
         input('Error (hit \'Enter\' to continue)')
         return
 
-def run_plotigtime(sets,data):
-    igtimes = loop_handl(sets,data,'igtimes',None)
-    wf.plot_igtime(sets,data,igtimes)
+def run_plotigtime(sets,data,showunc):
+    igtimes = loop_handl(sets,data,'igtimes')
+    wf.plot_igtime(sets,data,igtimes,showunc)
 
-def run_plotmedians(sets,data):
+def run_plotmedians(sets,data,showunc):
     medians_sets = []
     for i in range(0,len(sets),2):
         start = int(sets[i])
@@ -180,7 +185,7 @@ def run_plotmedians(sets,data):
             median_test = wf.get_median(test)
             medians = np.append(medians,median_test)
         medians_sets.append(medians)
-    wf.plotmedians(sets,data,medians_sets)
+    wf.plotmedians(sets,data,medians_sets,showunc)
 
 def run_tools(sets,data):
     running,error = True, False
@@ -297,13 +302,13 @@ def run_flamearea(sets,data):
             return
     return
 
-def run_plot_max_flame_area(sets,data):
+def run_plot_max_flame_area(sets,data,showunc):
     max_flame_area_sets = loop_handl(sets,data,'pltarea',None)
-    wf.plot_max_flame_area(sets,data,max_flame_area_sets)
+    wf.plot_max_flame_area(sets,data,max_flame_area_sets,showunc)
 
-def run_plot_ima(sets,data):
+def run_plot_ima(sets,data,showunc):
     ima_sets = loop_handl(sets,data,'pltima',None)
-    wf.plot_ima(sets,data,ima_sets)
+    wf.plot_ima(sets,data,ima_sets,showunc)
 
 def loop_handl(sets,data,tag,args):
     nsets = len(sets)
@@ -375,8 +380,9 @@ def main():
     sets = []
     for i in range(0,len(cache)-4):
         sets.append(cache[i])
-    distance = [cache[-4],cache[-3],cache[-2]]
-    ylim = float(cache[-1])
+    distance = [cache[-5],cache[-4],cache[-3]]
+    ylim = float(cache[-2])
+    showunc = bool(cache[-1])
     cmap_filepath = os.getcwd() + '_cache\\cmap.npy'
     cmap = str(np.load(cmap_filepath))
     running,error = True, False
@@ -407,9 +413,9 @@ def main():
         if usr_func == 't' or usr_func == 'T':
             run_tools(sets,data)
         elif usr_func == 'p' or usr_func == 'P':
-            run_createplots(sets,data,distance,ylim)
+            run_createplots(sets,data,distance,ylim,showunc)
         elif usr_func == 's' or usr_func == 'S':
-            distance,sets,ylim,cmap = run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath)
+            distance,sets,ylim,cmap,showunc = run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath,showunc)
             ylim = float(ylim)
         elif usr_func == 'v' or usr_func == 'V':
             run_validate(sets,data,distance,cmap)

@@ -621,8 +621,7 @@ def get_median(test):
     median = np.median(med_data)
     return median
 
-def plotmedians(sets,data,medians_sets):
-    showunc = True
+def plotmedians(sets,data,medians_sets,showunc):
     labels,temperatures,linestyle = get_plotinfo(sets,data)   
     median_averages = []
     for i in range(len(medians_sets)):           
@@ -768,8 +767,7 @@ def calc_saturate(test):
         return 999
     return
 
-def plot_max_flame_area(sets,data,max_flamearea_sets):  
-    showunc = False
+def plot_max_flame_area(sets,data,max_flamearea_sets,showunc):  
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     area_averages = []
     for i in range(len(max_flamearea_sets)):           
@@ -785,8 +783,7 @@ def plot_max_flame_area(sets,data,max_flamearea_sets):
     plt.show()
     return
 
-def plot_ima(sets,data,ima_sets):
-    showunc = True
+def plot_ima(sets,data,ima_sets,showunc):
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     ima_averages = []
     for i in range(len(ima_sets)):        
@@ -803,10 +800,9 @@ def plot_ima(sets,data,ima_sets):
     plt.show()
     return
 
-def plot_igtime(sets,data,igtimes):
+def plot_igtime(sets,data,igtimes,showunc):
     """ Plots ignition times for different sets of tests
     """
-    showunc = False
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     igtimes_averages = []
     for i in range(len(igtimes)):        
@@ -1031,4 +1027,24 @@ def plot_numpixelsarea(test):
     plt.plot(x_c,y)
     plt.plot(x_n,y)
     plt.show()
-    
+
+def change_errbar(showunc):
+    if showunc:
+        switch = 'on'
+        msg = 'Would you like to turn errorbars off? (y/n): '
+    else:
+        switch = 'off'
+        msg = 'Would you like to turn errorbars on? (y/n): '
+    print('Currently errorbars are switched ',switch,' for plots')
+    usr = input(msg)
+    if usr == 'y' and switch == 'off':
+        showunc = 1
+    elif usr == 'y' and switch == 'on':
+        showunc = 0
+    elif usr == 'n' and switch == 'off':
+        showunc = 0
+    elif usr == 'n' and switch == 'on':
+        showunc = 1
+    else:
+        input('Error')
+    return showunc
