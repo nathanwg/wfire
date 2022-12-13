@@ -169,7 +169,7 @@ def run_createplots(sets,data,distance,ylim,showunc):
         return
 
 def run_plotigtime(sets,data,showunc):
-    igtimes = loop_handl(sets,data,'igtimes')
+    igtimes = loop_handl(sets,data,'igtimes',None)
     wf.plot_igtime(sets,data,igtimes,showunc)
 
 def run_plotmedians(sets,data,showunc):
@@ -378,7 +378,7 @@ def main():
     filename = 'cache_wffpa.txt'
     cache = np.loadtxt(filename,unpack=True)
     sets = []
-    for i in range(0,len(cache)-4):
+    for i in range(0,len(cache)-5):
         sets.append(cache[i])
     distance = [cache[-5],cache[-4],cache[-3]]
     ylim = float(cache[-2])
