@@ -261,6 +261,7 @@ def run_validatearea(sets,data,cmap):
         print(' Check frame number ------------ n')
         print(' Calculate percent saturated --- s')
         print(' Check numpixel plot ----------- p')
+        print(' Select area tool -------------- a')
         print(' Go back ----------------------- b')
         for i in range(0,len(sets),2):
             print(round(sets[i]),'-',round(sets[i+1]))
@@ -278,6 +279,8 @@ def run_validatearea(sets,data,cmap):
             loop_handl(sets,data,'satpercent',None)
         elif usr == 'p':
             loop_handl(sets,data,'numpixelsarea',None)
+        elif usr == 'a':
+            loop_handl(sets,data,'selectarea',None)
         elif usr == 'b':
             running = False
         else:
@@ -368,6 +371,8 @@ def func_switch(test,tag,args):
         func_out = wf.calc_saturate(test)
     elif tag == 'numpixelsarea':
         func_out = wf.plot_numpixelsarea(test)
+    elif tag == 'selectarea':
+        func_out = wf.selectarea(test)
     else:
         return func_out
     return func_out

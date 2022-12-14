@@ -179,6 +179,9 @@ def get_points(img,test,points_type):
     elif points_type == 'grid':
         pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
         num_points = 2
+    elif points_type == 'selectarea':
+        pfilepath = cwd + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
+        num_points = None
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
@@ -188,7 +191,7 @@ def get_points(img,test,points_type):
     img = np.concatenate((img,calib),axis=1)
     plt.imshow(img,cmap='nipy_spectral_r')
     plt.get_current_fig_manager().window.showMaximized()
-    if points_type == 'grid':
+    if points_type == 'grid' or points_type == 'selectarea':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
         p = refine_gridpoints(p)
     else:
@@ -1048,3 +1051,12 @@ def change_errbar(showunc):
     else:
         input('Error')
     return showunc
+
+def selectarea(test):
+    areaframe_uncropped_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_uncropped.npy')
+    areaframe_uncropped = np.load(areaframe_uncropped_filepath)
+    p = get_points(areaframe_uncropped,test,'selectarea')[0]
+    pfilepath = os.getcwd() + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
+    # np.save(pfilepath)
+    return
+
