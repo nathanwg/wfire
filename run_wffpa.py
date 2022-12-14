@@ -91,7 +91,7 @@ def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath,showunc)
     file.write(' ')
     file.write(str(ylim))
     file.write(' ')
-    file.write(str(showunc))
+    file.write(str(int(showunc)))
     file.close()
     np.save(cmap_filepath,cmap)
 

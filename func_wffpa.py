@@ -14,6 +14,7 @@ import cv2 as cv
 import keyboard
 import matplotlib.animation as animation
 import func_wfipa
+import matplotlib.patches as pat
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -1057,6 +1058,15 @@ def selectarea(test):
     areaframe_uncropped = np.load(areaframe_uncropped_filepath)
     p = get_points(areaframe_uncropped,test,'selectarea')[0]
     pfilepath = os.getcwd() + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
+    left,right,bottom,top=p[0][0],p[0][1],p[1][0],p[1][1]
+    center = [(left+right)/2,(bottom+top)/2]
+    w = right-left
+    h = bottom-top
+    plt.imshow(areaframe_uncropped)
+    ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
+    ax = plt.gca()
+    ax.add_patch(ell)
+    plt.show()
     # np.save(pfilepath)
     return
 
