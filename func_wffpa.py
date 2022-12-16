@@ -15,6 +15,7 @@ import keyboard
 import matplotlib.animation as animation
 import func_wfipa
 import matplotlib.patches as pat
+from pynput import keyboard
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -928,9 +929,32 @@ def displayarea(test,cmap_usr):
         plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
         plt.get_current_fig_manager().window.showMaximized()
         plt.show(block=False)
-        plt.waitforbuttonpress()
+        run = True
+        plt.pause(0.5)
+        listener = keyboard.Listener(
+        on_press=on_press,
+        on_release=on_release)
+        listener.start()
+        while run:
+            plt.waitforbuttonpress(timeout=0.1)
+            isfig = bool(plt.get_fignums())
+            if isfig == False or listener.running == False:
+                run = False
         plt.close()
     return
+
+def on_release(key):
+    print('{0} released'.format(
+        key))
+    if key == keyboard.Key.enter:
+        # Stop listener
+        return False
+
+def on_press(key):
+    try:
+        print()
+    except AttributeError:
+        print()
 
 def checkframenum(test,cmap_usr):
     frame_num_cropped = load_area(test)[1]
@@ -1066,6 +1090,13 @@ def selectarea(test):
     ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
     ax = plt.gca()
     ax.add_patch(ell)
+    a = ell.contains_point(center)
+    b = ell.contains_point([right+2,bottom-3])
+    transform = ell.get_transform().transform(center)
+    d = ell.contains_point(transform)
+    cen = ell.get_center()
+    print(a,b,transform,cen,center,d)
+    input('Continue')
     plt.show()
     # np.save(pfilepath)
     return
