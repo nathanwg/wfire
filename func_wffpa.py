@@ -80,7 +80,7 @@ def show_frames(frames,foi,eof):
         ax.axes.xaxis.set_visible(False)
         ax.axes.yaxis.set_visible(False)
         plt.get_current_fig_manager().window.showMaximized()
-        plt.show()
+        show_window()
 
     ignition_frame = int(foi)
     img01 = frames[ignition_frame]
@@ -162,7 +162,7 @@ def displaymaps(heatmap):
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     plt.get_current_fig_manager().window.showMaximized()
-    plt.show()
+    show_window()
     return True
 
 def get_points(img,test,points_type):
@@ -313,7 +313,7 @@ def display_linedisplay(h,coordinates):
         h[y,i] = 4500
     plt.close()
     plt.imshow(h,cmap='nipy_spectral_r')
-    plt.show()
+    show_window()
 
 def change_linepar(distance):
     print('Distance is currently [vert distance, distance to left, distance to right] (cm) - ',distance,'\n')
@@ -386,8 +386,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
     plt.ylim(0,ylim)
     plt.xlim(0,9)
     plt.legend()
-    plt.show()
-    plt.close()
+    show_window()
 
 def plotprofiles_v(sets,data,isnorm,xlim):
     labels = []
@@ -438,8 +437,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
     plt.xlim(0,xlim)
     plt.ylim(0,9)
     plt.legend()
-    plt.show()
-    plt.close()
+    show_window()
         
 def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
@@ -596,7 +594,7 @@ def creategrids(test):
     for k in x_ticks:
         x_plot = np.linspace(k,k,100)
         plt.plot(x_plot,y_plot,'k')
-    plt.show()
+    show_window()
             
     return
                 
@@ -640,7 +638,7 @@ def plotmedians(sets,data,medians_sets,showunc):
     plt.title('Average median of flame detection during burning')
     plt.legend()
     plt.ylim(0,1)
-    plt.show()
+    show_window()
     return
 
 def get_max_flame_area(test):
@@ -785,7 +783,7 @@ def plot_max_flame_area(sets,data,max_flamearea_sets,showunc):
     plt.ylabel('Maximum flame area (cm$^2$)')
     plt.title('Average maximum flame area')
     plt.legend()
-    plt.show()
+    show_window()
     return
 
 def plot_ima(sets,data,ima_sets,showunc):
@@ -802,7 +800,7 @@ def plot_ima(sets,data,ima_sets,showunc):
     plt.title('Average normalized light intensity of maximum flame area')
     plt.ylim(0,1)
     plt.legend()
-    plt.show()
+    show_window()
     return
 
 def plot_igtime(sets,data,igtimes,showunc):
@@ -820,7 +818,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.ylabel('Average ignition time (s)')
     plt.title('Average ignition times')
     plt.legend()
-    plt.show()
+    show_window()
     return
     return
 
@@ -928,24 +926,40 @@ def displayarea(test,cmap_usr):
         plt.title(title)
         plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
         plt.get_current_fig_manager().window.showMaximized()
-        plt.show(block=False)
-        run = True
-        plt.pause(0.5)
-        listener = keyboard.Listener(
-        on_press=on_press,
-        on_release=on_release)
-        listener.start()
-        while run:
-            plt.waitforbuttonpress(timeout=0.1)
-            isfig = bool(plt.get_fignums())
-            if isfig == False or listener.running == False:
-                run = False
-        plt.close()
+        show_window()
+        # plt.show(block=False)
+        # run = True
+        # plt.pause(0.5)
+        # listener = keyboard.Listener(
+        # on_press=on_press,
+        # on_release=on_release)
+        # listener.start()
+        # while run:
+        #     plt.waitforbuttonpress(timeout=0.1)
+        #     isfig = bool(plt.get_fignums())
+        #     if isfig == False or listener.running == False:
+        #         run = False
+        # plt.close()
+    return
+
+def show_window():
+    plt.show(block=False)
+    run = True
+    plt.pause(0.5)
+    listener = keyboard.Listener(
+    on_press=on_press,
+    on_release=on_release)
+    listener.start()
+    while run:
+        plt.waitforbuttonpress(timeout=0.1)
+        isfig = bool(plt.get_fignums())
+        if isfig == False or listener.running == False:
+            run = False
+    plt.close()
     return
 
 def on_release(key):
-    print('{0} released'.format(
-        key))
+    print()
     if key == keyboard.Key.enter:
         # Stop listener
         return False
@@ -1006,10 +1020,7 @@ def comp_frames(img,cmap_usr):
     plt.imshow(imgshow,cmap=cmap_usr)
     plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
     print('Left-most image is with a rectangle being removed')
-    plt.show(block=False)
-    state = plt.waitforbuttonpress()
-    if state == False or state == True:
-        plt.close()
+    show_window()
     return
 
 def change_cmap(cmap):
@@ -1054,7 +1065,8 @@ def plot_numpixelsarea(test):
     plt.plot(x,numpixels,linewidth=0.5)
     plt.plot(x_c,y)
     plt.plot(x_n,y)
-    plt.show()
+    show_window()
+    return
 
 def change_errbar(showunc):
     if showunc:
@@ -1097,7 +1109,7 @@ def selectarea(test):
     cen = ell.get_center()
     print(a,b,transform,cen,center,d)
     input('Continue')
-    plt.show()
+    show_window()
     # np.save(pfilepath)
     return
 
