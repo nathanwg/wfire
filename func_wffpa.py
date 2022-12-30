@@ -1056,19 +1056,22 @@ def plot_numpixelsarea(test,showmax):
         return None
     numpixels = np.load(numpixels_filepath)
     num_frames = len(numpixels)
-    x = np.linspace(1,num_frames,num_frames)/500
+    x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
+    if showmax == False:
+        x/=500
+        xlabel = 'time (s)'
 
-    pixel_length = test.spatial_calibration*1000 # change from m to mm
+    pixel_length = test.spatial_calibration*100 # change from m to cm
     pixel_area = pixel_length**2
-    areapixels = numpixels*pixel_area # mm^2
+    areapixels = numpixels*pixel_area # cm^2
 
     plt.plot(x,areapixels,linewidth=0.5)
-    plt.xlabel('time (s)')
-    plt.ylabel('pixel area (mm$^2$)')
+    plt.xlabel(xlabel)
+    plt.ylabel('pixel area (cm$^2$)')
     if showmax:
         frame_num_cropped = load_area(test)[1]
         frame_num_numpixels = np.load(areavals_numpixels_filepath)
-        x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(numpixels)]
+        x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(areapixels)]
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
@@ -1099,24 +1102,46 @@ def change_errbar(showunc):
 def selectarea(test):
     areaframe_uncropped_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_uncropped.npy')
     areaframe_uncropped = np.load(areaframe_uncropped_filepath)
-    p = get_points(areaframe_uncropped,test,'selectarea')[0]
-    pfilepath = os.getcwd() + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
-    left,right,bottom,top=p[0][0],p[0][1],p[1][0],p[1][1]
-    center = [(left+right)/2,(bottom+top)/2]
-    w = right-left
-    h = bottom-top
-    plt.imshow(areaframe_uncropped)
-    ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
-    ax = plt.gca()
-    ax.add_patch(ell)
-    a = ell.contains_point(center)
-    b = ell.contains_point([right+2,bottom-3])
-    transform = ell.get_transform().transform(center)
-    d = ell.contains_point(transform)
-    cen = ell.get_center()
-    print(a,b,transform,cen,center,d)
-    input('Continue')
-    show_window()
-    # np.save(pfilepath)
+    ell_filepath = os.getcwd() + '_cache\\flame_area\\ell\\' + test.filename.replace('.tif','_ell.npy')
+    running,count = True,0
+    while running:
+        p = get_points(areaframe_uncropped,test,'selectarea')[0]
+        pfilepath = os.getcwd() + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
+        left,right,bottom,top=p[0][0],p[0][1],p[1][0],p[1][1]
+        center = [(left+right)/2,(bottom+top)/2]
+        w = right-left
+        h = bottom-top
+        ell_info = np.array((center,[w,h]))
+        if os.path.exists(ell_filepath) == True:
+            ell_list = np.load(ell_filepath)
+            ell_list = np.append(ell_list,ell_info,axis=0)
+        else:
+            if count == 0:
+                ell_list = ell_info
+            elif count != 0:
+                ell_list = np.append(ell_list,ell_info,axis=0)
+
+        plt.imshow(areaframe_uncropped)
+
+        for i in range(int(ell_list.shape[0]/2)):
+            center = ell_list[2*i]
+            w = ell_list[2*i+1][0]
+            h = ell_list[2*i+1][1]
+            ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
+            ax = plt.gca()
+            ax.add_patch(ell)
+
+        # a = ell.contains_point(center)
+        # b = ell.contains_point([right+2,bottom-3])
+        # transform = ell.get_transform().transform(center)
+        # d = ell.contains_point(transform)
+        # cen = ell.get_center()
+        # print(a,b,transform,cen,center,d)
+        show_window()
+        count+=1
+        usr = input('Would you like to continue selecting areas? (y/n)')
+        if usr == 'n':
+            running = False
+    np.save(ell_filepath,ell_list)
     return
 

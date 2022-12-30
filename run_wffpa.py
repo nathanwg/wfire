@@ -77,7 +77,7 @@ def run_changeparameters(distance,sets,filename,ylim,cmap,cmap_filepath,showunc)
     elif usr == 'e':
         showunc = wf.change_errbar(showunc)
     elif usr == 'b':
-        return distance,sets,ylim
+        return distance,sets,ylim,cmap,bool(showunc)
     else:
         print()
     file = open(filename,'w')
