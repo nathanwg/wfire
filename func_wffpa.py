@@ -1047,7 +1047,7 @@ def change_cmap(cmap):
     cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','turbo']
     return cmaps[usr-1]
 
-def plot_numpixelsarea(test):
+def plot_numpixelsarea(test,showmax):
     numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
     areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
 
@@ -1056,15 +1056,22 @@ def plot_numpixelsarea(test):
         return None
     numpixels = np.load(numpixels_filepath)
     num_frames = len(numpixels)
-    x = np.linspace(1,num_frames,num_frames)
-    frame_num_cropped = load_area(test)[1]
-    frame_num_numpixels = np.load(areavals_numpixels_filepath)
-    x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(numpixels)]
-    x_n = [frame_num_numpixels,frame_num_numpixels]
+    x = np.linspace(1,num_frames,num_frames)/500
 
-    plt.plot(x,numpixels,linewidth=0.5)
-    plt.plot(x_c,y)
-    plt.plot(x_n,y)
+    pixel_length = test.spatial_calibration*1000 # change from m to mm
+    pixel_area = pixel_length**2
+    areapixels = numpixels*pixel_area # mm^2
+
+    plt.plot(x,areapixels,linewidth=0.5)
+    plt.xlabel('time (s)')
+    plt.ylabel('pixel area (mm$^2$)')
+    if showmax:
+        frame_num_cropped = load_area(test)[1]
+        frame_num_numpixels = np.load(areavals_numpixels_filepath)
+        x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(numpixels)]
+        x_n = [frame_num_numpixels,frame_num_numpixels]
+        plt.plot(x_c,y)
+        plt.plot(x_n,y)
     show_window()
     return
 

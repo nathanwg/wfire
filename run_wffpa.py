@@ -142,6 +142,7 @@ def run_createplots(sets,data,distance,ylim,showunc):
     print(' Plot timeline medians ----------- m')
     print(' Plot max flame areas ------------ r')
     print(' Plot avg int of max flame areas - s')
+    print(' Plot numpixels ------------------ n')
     usr = input('Selected option: ')
     if usr == 'p':
         run_plotprofiles(sets,data,distance,ylim)
@@ -164,6 +165,8 @@ def run_createplots(sets,data,distance,ylim,showunc):
         run_plot_max_flame_area(sets,data,showunc)
     elif usr == 's':
         run_plot_ima(sets,data,showunc)
+    elif usr == 'n':
+        loop_handl(sets,data,'numpixelsarea',args=[False])
     else:
         input('Error (hit \'Enter\' to continue)')
         return
@@ -278,7 +281,7 @@ def run_validatearea(sets,data,cmap):
         elif usr == 's':
             loop_handl(sets,data,'satpercent',None)
         elif usr == 'p':
-            loop_handl(sets,data,'numpixelsarea',None)
+            loop_handl(sets,data,'numpixelsarea',args=[True])
         elif usr == 'a':
             loop_handl(sets,data,'selectarea',None)
         elif usr == 'b':
@@ -370,7 +373,7 @@ def func_switch(test,tag,args):
     elif tag == 'satpercent':
         func_out = wf.calc_saturate(test)
     elif tag == 'numpixelsarea':
-        func_out = wf.plot_numpixelsarea(test)
+        func_out = wf.plot_numpixelsarea(test,showmax=args[0])
     elif tag == 'selectarea':
         func_out = wf.selectarea(test)
     else:
