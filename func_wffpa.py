@@ -79,8 +79,7 @@ def show_frames(frames,foi,eof):
         ax = plt.gca()
         ax.axes.xaxis.set_visible(False)
         ax.axes.yaxis.set_visible(False)
-        plt.get_current_fig_manager().window.showMaximized()
-        show_window()
+        show_window(noticks=True,winmax=True)
 
     ignition_frame = int(foi)
     img01 = frames[ignition_frame]
@@ -161,8 +160,7 @@ def displaymaps(heatmap):
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    plt.get_current_fig_manager().window.showMaximized()
-    show_window()
+    show_window(noticks=True,winmax=True)
     return True
 
 def get_points(img,test,points_type):
@@ -189,9 +187,9 @@ def get_points(img,test,points_type):
         return 0,0,False
     num_rows = img.shape[0]
     calib = np.zeros((num_rows,1))
-    calib[0,0] = 4500
-    img = np.concatenate((img,calib),axis=1)
-    plt.imshow(img,cmap='nipy_spectral_r')
+    calib[0,0] = 255
+    # img = np.concatenate((img,calib),axis=1)
+    plt.imshow(img)
     plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid' or points_type == 'selectarea':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
@@ -313,7 +311,7 @@ def display_linedisplay(h,coordinates):
         h[y,i] = 4500
     plt.close()
     plt.imshow(h,cmap='nipy_spectral_r')
-    show_window()
+    show_window(noticks=True,winmax=False)
 
 def change_linepar(distance):
     print('Distance is currently [vert distance, distance to left, distance to right] (cm) - ',distance,'\n')
@@ -386,7 +384,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
     plt.ylim(0,ylim)
     plt.xlim(0,9)
     plt.legend()
-    show_window()
+    show_window(noticks=False,winmax=False)
 
 def plotprofiles_v(sets,data,isnorm,xlim):
     labels = []
@@ -437,7 +435,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
     plt.xlim(0,xlim)
     plt.ylim(0,9)
     plt.legend()
-    show_window()
+    show_window(noticks=False,winmax=False)
         
 def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
@@ -594,7 +592,7 @@ def creategrids(test):
     for k in x_ticks:
         x_plot = np.linspace(k,k,100)
         plt.plot(x_plot,y_plot,'k')
-    show_window()
+    show_window(noticks=True,winmax=False)
             
     return
                 
@@ -638,7 +636,7 @@ def plotmedians(sets,data,medians_sets,showunc):
     plt.title('Average median of flame detection during burning')
     plt.legend()
     plt.ylim(0,1)
-    show_window()
+    show_window(noticks=False,winmax=False)
     return
 
 def get_max_flame_area(test):
@@ -783,7 +781,7 @@ def plot_max_flame_area(sets,data,max_flamearea_sets,showunc):
     plt.ylabel('Maximum flame area (cm$^2$)')
     plt.title('Average maximum flame area')
     plt.legend()
-    show_window()
+    show_window(noticks=False,winmax=False)
     return
 
 def plot_ima(sets,data,ima_sets,showunc):
@@ -800,7 +798,7 @@ def plot_ima(sets,data,ima_sets,showunc):
     plt.title('Average normalized light intensity of maximum flame area')
     plt.ylim(0,1)
     plt.legend()
-    show_window()
+    show_window(noticks=False,winmax=False)
     return
 
 def plot_igtime(sets,data,igtimes,showunc):
@@ -818,7 +816,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.ylabel('Average ignition time (s)')
     plt.title('Average ignition times')
     plt.legend()
-    show_window()
+    show_window(noticks=False,winmax=False)
     return
     return
 
@@ -915,6 +913,15 @@ def displayarea(test,cmap_usr):
     dis_bool = ((dis - threshold)>=0)
     dis_new = np.multiply(dis,dis_bool)
     imgshow = np.concatenate((dis,dis_new),axis=0)
+
+    areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    if os.path.exists(areaframe_ell_path):
+        areaframe_ell = np.load(areaframe_ell_path)
+        areaframe_ell = np.concatenate((areaframe_ell,calib),axis=1)
+        frame_bool = ((areaframe_ell-threshold)>=0)
+        img_add = np.multiply(areaframe_ell,frame_bool)
+        img_new = np.concatenate((areaframe_ell,img_add),axis=0)
+        imgshow = np.concatenate((imgshow,img_new),axis=1)
     if show:
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------')
@@ -924,25 +931,14 @@ def displayarea(test,cmap_usr):
         plt.imshow(imgshow,cmap=cmap_usr)
         title = 'Test number: '+str(int(test.testnumber))
         plt.title(title)
-        plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
-        plt.get_current_fig_manager().window.showMaximized()
-        show_window()
-        # plt.show(block=False)
-        # run = True
-        # plt.pause(0.5)
-        # listener = keyboard.Listener(
-        # on_press=on_press,
-        # on_release=on_release)
-        # listener.start()
-        # while run:
-        #     plt.waitforbuttonpress(timeout=0.1)
-        #     isfig = bool(plt.get_fignums())
-        #     if isfig == False or listener.running == False:
-        #         run = False
-        # plt.close()
+        show_window(noticks=True,winmax=True)
     return
 
-def show_window():
+def show_window(noticks,winmax):
+    if noticks:
+        plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
+    if winmax:
+        plt.get_current_fig_manager().window.showMaximized()
     plt.show(block=False)
     run = True
     plt.pause(0.5)
@@ -1001,7 +997,7 @@ def checkframenum(test,cmap_usr):
     for i in ind:
         print(i)
     print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
-    print(frame_num_cropped)
+    print(int(frame_num_cropped))
     usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
     if usr == 'q':
         return
@@ -1018,9 +1014,8 @@ def comp_frames(img,cmap_usr):
     img_new = np.multiply(img,img_bool)
     imgshow = np.concatenate((img,img_new),axis=0)
     plt.imshow(imgshow,cmap=cmap_usr)
-    plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
-    print('Left-most image is with a rectangle being removed')
-    show_window()
+    plt.title('Left: frame of max area (based on numpixels with cropped rectangle removal). Right: frame of max area (based on numpixels)')
+    show_window(noticks=True,winmax=True)
     return
 
 def change_cmap(cmap):
@@ -1071,11 +1066,11 @@ def plot_numpixelsarea(test,showmax):
     if showmax:
         frame_num_cropped = load_area(test)[1]
         frame_num_numpixels = np.load(areavals_numpixels_filepath)
-        x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(areapixels)]
+        x_c,y = [frame_num_cropped,frame_num_cropped],[0,np.amax(areapixels)/2]
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
-    show_window()
+    show_window(noticks=False,winmax=True)
     return
 
 def change_errbar(showunc):
@@ -1103,6 +1098,9 @@ def selectarea(test):
     areaframe_uncropped_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_uncropped.npy')
     img = np.load(areaframe_uncropped_filepath)
     ell_filepath = os.getcwd() + '_cache\\flame_area\\ell\\' + test.filename.replace('.tif','_ell.npy')
+    areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    if os.path.exists(areaframe_ell_path) == True:
+        img = np.load(areaframe_ell_path)
     running,count = True,0
     while running:
         p = get_points(img,test,'selectarea')[0]
@@ -1121,26 +1119,26 @@ def selectarea(test):
             elif count != 0:
                 ell_list = np.append(ell_list,ell_info,axis=0)
 
-        # plt.imshow(img)
-
         for i in range(int(ell_list.shape[0]/2)):
             center = ell_list[2*i]
             w = ell_list[2*i+1][0]
             h = ell_list[2*i+1][1]
             ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
-            img_new = edit_frame(test,img,ell,[center,w,h])
-            # ax = plt.gca()
-            # ax.add_patch(ell)
+            img_new = edit_frame(img,ell,[center,w,h])
+    
         plt.imshow(img_new)
-        show_window()
+        show_window(noticks=True,winmax=True)
         count+=1
         usr = input('Would you like to continue selecting areas? (y/n)')
         if usr == 'n':
             running = False
+        elif usr == 'y':
+            img = img_new
     np.save(ell_filepath,ell_list)
+    np.save(areaframe_ell_path,img_new)
     return
 
-def edit_frame(test,img_new,ell,inf):
+def edit_frame(img_new,ell,inf):
     c,w,h = inf[0],inf[1],inf[2]
     x = int(c[0]-w/2)
     y = int(c[1]-h/2)
