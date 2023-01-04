@@ -198,6 +198,7 @@ def run_tools(sets,data):
         print('Type option from the following list and hit enter:')
         print(' Heatmaps ------------ h','\n','Select points ------- s')
         print(' Flame area ---------- a')
+        print(' Display data values - d')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
         for i in range(0,len(sets),2):
@@ -214,11 +215,43 @@ def run_tools(sets,data):
             run_selectpoints(sets,data)
         elif usr_func == 'a':
             run_flamearea(sets,data)
+        elif usr_func == 'd':
+            run_displaydata(sets,data)
         elif usr_func == 'b':
             return
         else:
             error = True
     return
+
+def run_displaydata(sets,data):
+    running,error = True,False
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Display data values to the terminal\n Type option from the following list and hit enter: ')
+        print(' Ignition times ------ i')
+        print(' Go back ------------- b')
+        if error is True:
+            print('Error -- selected invalid option')
+            error = False
+            print()
+        usr_func = input('Selected option: ')
+        if usr_func == 'i':
+            run_printigtimes(sets,data)
+        elif usr_func == 'b':
+            return
+        else:
+            error = True
+
+def run_printigtimes(sets,data):
+    igtimes = loop_handl(sets,data,'igtimes',None)
+    usr = input('Would you like to print individual values for each test, or average values for each set? (i/a): ')
+    if usr == 'i':
+        loop_handl(sets,data,'print_igtimes',args=[igtimes])
+    elif usr == 'a':
+        wf.print_igtimes_avg(sets,data,igtimes)
+    else:
+        input('error')
 
 def run_validate(sets,data,distance,cmap):
     running,error = True, False
@@ -376,6 +409,8 @@ def func_switch(test,tag,args):
         func_out = wf.plot_numpixelsarea(test,showmax=args[0])
     elif tag == 'selectarea':
         func_out = wf.selectarea(test)
+    elif tag == 'print_igtimes':
+        print()
     else:
         return func_out
     return func_out

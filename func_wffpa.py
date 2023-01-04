@@ -218,14 +218,77 @@ def refine_gridpoints(p):
 def change_tests():
     """....
     """
-    n = input('How many sets do you want to specify? - ')
     sets = []
+    usr = input('Choose from preset selections (y/n)')
+    if usr == 'y':
+        sets = choose_preset(sets)
+        return sets
+    n = input('How many sets do you want to specify? - ')
     for i in range(0,int(n)):
         m1 = input('Enter start number of set: ')
         m2 = input('Enter end number of set: ')
         sets.append(int(m1))
         sets.append(int(m2))
     return sets
+
+def choose_preset(sets):
+    running = True
+    is_1,is_2,is_3,is_4,is_5,is_6=0,0,0,0,0,0
+    while running:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Individual (65mm): 1')
+        print('Individual (83mm): 2')
+        print('Multiple-Live (65mm): 3')
+        print('Multiple-Live (83mm): 4')
+        print('Multiple-dried (65mm): 5')
+        print('Multiple-dried (83mm): 6')
+        print('Selection finished: f')
+        usr = input('Choose selection: ')
+        if usr == '1':
+            if is_1:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([189,198,119,128,249,258,89,98,269,278])
+            is_1 = True
+        elif usr == '2':
+            if is_2:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([199,202,129,138,259,268,99,108,279,288])
+            is_2 = True
+        elif usr == '3':
+            if is_3:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([209,218,169,178,229,238,159,168,289,298])
+            is_3 = True
+        elif usr == '4':
+            if is_4:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([219,228,179,188,239,248,149,158,299,308])
+            is_4 = True
+        elif usr == '5':
+            if is_5:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([311,320,323,332,335,344,347,356,359,368])
+            is_5 = True
+        elif usr == '6':
+            if is_6:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([369,378,379,388,389,398,399,408,409,418])
+            is_6 = True
+        elif usr == 'f':
+            running = False
+    sets_new = []
+    for i in range(len(sets)):
+        var = sets[i]
+        for j in range(len(var)):
+            sets_new.append(var[j])
+    return sets_new
 
 def load_heatmap(test):
     """...
@@ -818,7 +881,23 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.legend()
     show_window(noticks=False,winmax=False)
     return
+
+def print_igtimes_avg(sets,data,igtimes):
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------','\n')
+    igtimes_averages = []
+    temperatures = get_plotinfo(sets,data)[1]
+    for i in range(len(igtimes)):
+        igtimes_averages.append(np.mean(igtimes[i]))
+        unc = calc_uncertainty(igtimes[i],10)
+        start,stop=int(sets[i]),int(sets[i+1])
+        print('Temperature: ',temperatures[i])
+        # print('Test numbers: ',start,'-',stop)
+        print('Average ignition time: ',round(igtimes_averages[i]/500,2))
+        print('Uncertainty: ',round(unc/500,2),'\n\n')
+    input('Press enter to continue')
     return
+
 
 def get_plotinfo(sets,data):
     """ This function gets plot info and returns
