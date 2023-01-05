@@ -187,8 +187,9 @@ def get_points(img,test,points_type):
         return 0,0,False
     num_rows = img.shape[0]
     calib = np.zeros((num_rows,1))
-    calib[0,0] = 255
-    # img = np.concatenate((img,calib),axis=1)
+    calib[0,0] = 4500
+    if points_type != 'selectarea':
+        img = np.concatenate((img,calib),axis=1)
     plt.imshow(img)
     plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid' or points_type == 'selectarea':
@@ -296,6 +297,7 @@ def load_heatmap(test):
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
     path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
+    msg = 'You can create this file by generating a heatmap'
     ischeck = checkfile(path,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
@@ -707,9 +709,10 @@ def get_max_flame_area(test):
     mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
     ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True,isinput=True),checkfile(afilepath,test,checktype=True,isinput=True)
     if ischeck_m == False or ischeck_a == False:
-        return 999
+        return None
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
     if x_left == None:
+        input('No gridpoints')
         return 999
     file = os.getcwd().replace('wfire','') + test.filename
     img,filename = readfile(file,True)
@@ -729,29 +732,49 @@ def get_max_flame_area(test):
         ref_frame[y_top:y_bot,x_left:x_right] = 0
         if ref_frame.max() < threshold:
             continue
-        x_bool = ((ref_frame-threshold)>=0)
-        numpixels_frame = x_bool.sum()
-        pixel_area = pixel_length**2
-        flame_area = pixel_area*numpixels_frame*(1000**2)
+        flame_area = calc_area(ref_frame,None,threshold,pixel_length,'frame')
         if flame_area > max_flame_area:
             max_flame_area = flame_area
             m_frame = ref_frame
-            npf = numpixels_frame
             frame_num = k
 
-    # for k in range(num_cols):
-    #     for m in range(num_rows):
-    #         if m_frame[m,k] > threshold:
-    #             m_frame[m,k] = 255
-    print('Numpixels_frame: ',npf,'\n','Pixel_area: ',pixel_area)
     print('Threshold: ',threshold)
-    print('Total area: ',round(max_flame_area),' mm^2')
-    # input()
+    print('Total area: ',round(max_flame_area,2),' cm^2')
     np.save(mfilepath,m_frame)
     np.save(afilepath,[max_flame_area,frame_num])
-    # plt.imshow(m_frame)
-    # plt.show()
-                
+
+def load_area(test):
+    newvals = True
+    afilepath = os.getcwd()+'_cache\\flame_area\\vals\\'+test.filename.replace('.tif','_area_vals.npy')
+    ischeck = checkfile(afilepath,test,checktype=False,isinput=True)
+    if ischeck == False:
+        return None,None
+    vals = np.load(afilepath)
+    max_flamearea,frame_num = vals[0]/(10**2),vals[1]
+
+    areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    if os.path.exists(areaframe_ell_path) and newvals:
+        threshold = get_threshold(test.fmc)
+        max_flamearea = calc_area(None,areaframe_ell_path,threshold,test.spatial_calibration,'file')
+    else:
+        print('\nTest number ',test.testnumber,' is using an outdated area')
+    return max_flamearea,frame_num     
+
+def calc_area(ref_frame,filename,threshold,pixel_length,tag):      
+    if tag == 'file':
+        ref_frame = np.load(filename)
+    x_bool = ((ref_frame-threshold)>=0)
+    numpixels_frame = x_bool.sum()
+    pixel_area = pixel_length**2
+    flame_area = pixel_area*numpixels_frame*(100**2)
+    return flame_area
+
+def get_threshold(fmc):
+    if fmc == 0:
+        threshold = 50
+    else:
+        threshold = 35
+    return threshold
 
 def get_ima(test):
     mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
@@ -792,14 +815,6 @@ def calc_uncertainty(arr,n):
     unc = tval*np.std(arr)/np.sqrt(n)
     return unc
 
-def load_area(test):
-    afilepath = os.getcwd()+'_cache\\flame_area\\vals\\'+test.filename.replace('.tif','_area_vals.npy')
-    ischeck = checkfile(afilepath,test,checktype=False,isinput=True)
-    if ischeck == False:
-        return None,None
-    vals = np.load(afilepath)
-    max_flamearea,frame_num = vals[0]/(10**2),vals[1]
-    return max_flamearea,frame_num
 
 def load_areaframe(test):
     ffilepath = os.getcwd().replace('wfire','wfire_cache\\flame_area\\frames\\')+test.filename.replace('.tif','_areaframe_uncropped.npy')
@@ -1124,7 +1139,7 @@ def change_cmap(cmap):
 def plot_numpixelsarea(test,showmax):
     numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
     areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
-
+    msg = 'You need to run \'Check frame number\' to generate this file'
     ischeck = checkfile(numpixels_filepath,test,checktype=False,isinput=True)
     if ischeck == False:
         return None
