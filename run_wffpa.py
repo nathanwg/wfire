@@ -143,6 +143,8 @@ def run_createplots(sets,data,distance,ylim,showunc):
     print(' Plot max flame areas ------------ r')
     print(' Plot avg int of max flame areas - s')
     print(' Plot numpixels ------------------ n')
+    print(' Plot flaming duration ----------- d')
+    print( 'Go back ------------------------- b')
     usr = input('Selected option: ')
     if usr == 'p':
         run_plotprofiles(sets,data,distance,ylim)
@@ -167,9 +169,16 @@ def run_createplots(sets,data,distance,ylim,showunc):
         run_plot_ima(sets,data,showunc)
     elif usr == 'n':
         loop_handl(sets,data,'numpixelsarea',args=[False])
+    elif usr == 'd':
+        run_plotdur(sets,data)
+    elif usr == 'b':
+        return
     else:
         input('Error (hit \'Enter\' to continue)')
-        return
+
+def run_plotdur(sets,data):
+    durations = loop_handl(sets,data,'flamdur',None)
+    return
 
 def run_plotigtime(sets,data,showunc):
     igtimes = loop_handl(sets,data,'igtimes',None)
