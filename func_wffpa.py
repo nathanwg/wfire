@@ -194,7 +194,8 @@ def get_points(img,test,points_type):
     plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid' or points_type == 'selectarea':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
-        p = refine_gridpoints(p)
+        rows,cols = img.shape[0],img.shape[1]
+        p = refine_gridpoints(p,rows,cols)
     else:
         p = plt.ginput(num_points)
 ##    print(p[0][0],p[0][1])
@@ -202,8 +203,8 @@ def get_points(img,test,points_type):
 
     return p,num_points
 
-def refine_gridpoints(p):
-    x_left,x_right,y_bot,y_top = 255,0,0,255
+def refine_gridpoints(p,rows,cols):
+    x_left,x_right,y_bot,y_top = cols-1,0,0,rows-1
     for k in range(0,len(p)):
         if p[k][0] < x_left:
             x_left = int(p[k][0])
@@ -756,20 +757,35 @@ def load_area(test):
     areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
     if os.path.exists(areaframe_ell_path) and newvals:
         threshold = get_threshold(test.fmc)
-        max_flamearea = calc_area(None,areaframe_ell_path,threshold,test.spatial_calibration,'file')
+        areas = calc_area(None,areaframe_ell_path,threshold,test.spatial_calibration,'file')
+        if isinstance(areas,list):
+            if areas[0] > areas[1]:
+                max_flamearea = areas[0]
+            else:
+                max_flamearea = areas[1]
+        else:
+            max_flamearea = areas
     else:
         print('\nTest number ',test.testnumber,' is using an outdated area')
     return max_flamearea,frame_num     
 
 def calc_area(ref_frame,filename,threshold,pixel_length,tag):      
+    pixel_area = pixel_length**2
     if tag == 'file':
         ref_frame = np.load(filename)
     ref_frame = ref_frame.astype(float)
-    x_bool = ((ref_frame-threshold)>=0)
-    numpixels_frame = x_bool.sum()
-    pixel_area = pixel_length**2
-    flame_area = pixel_area*numpixels_frame*(100**2)
-    return flame_area
+    rows,cols = ref_frame.shape[0],ref_frame.shape[1]
+    if rows != cols:
+        ref_frame01,ref_frame02 = ref_frame[0:rows,0:int(cols/2)],ref_frame[0:rows,int(cols/2):cols]
+        x_bool01,x_bool02 = ((ref_frame01-threshold)>=0),((ref_frame02-threshold)>=0)
+        numpixels_frame01,numpixels_frame02 = x_bool01.sum(),x_bool02.sum()
+        flame_area01,flame_area02 = pixel_area*numpixels_frame01*(100**2),pixel_area*numpixels_frame02*(100**2)
+        return [flame_area01,flame_area02]
+    else:
+        x_bool = ((ref_frame-threshold)>=0)
+        numpixels_frame = x_bool.sum()
+        flame_area = pixel_area*numpixels_frame*(100**2)
+        return flame_area
 
 def get_threshold(fmc):
     if fmc == 0:
@@ -824,6 +840,17 @@ def load_areaframe(test):
     if ischeck == False:
         return None
     frame = np.load(ffilepath)
+    fpath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    if os.path.exists(fpath):
+        frame = np.load(fpath)
+        rows,cols = frame.shape[0],frame.shape[1]
+        if rows != cols:
+            areas = calc_area(frame,None,threshold,test.spatial_calibration,'frame')
+            if areas[0] >= areas[1]:
+                start,stop = 0,int(cols/2)
+            elif areas[1] > areas[0]:
+                start,stop = int(cols/2),cols
+            frame = frame[0:rows,start:stop]
     return frame
 
 def calc_saturate(test):
@@ -993,7 +1020,7 @@ def checkfile(filepath,test,checktype,isinput):
     return
 
 def displayarea(test,cmap_usr):
-    show = False
+    show = True
     if test.fmc == 0:
         threshold = 50
     else:
@@ -1029,6 +1056,14 @@ def displayarea(test,cmap_usr):
     areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
     if os.path.exists(areaframe_ell_path):
         areaframe_ell = np.load(areaframe_ell_path)
+        rows,cols = areaframe_ell.shape[0],areaframe_ell.shape[1]
+        if rows != cols:
+            areas = calc_area(areaframe_ell,None,threshold,test.spatial_calibration,'frame')
+            if areas[0] >= areas[1]:
+                start,stop = 0,int(cols/2)
+            elif areas[1] > areas[0]:
+                start,stop = int(cols/2),cols
+            areaframe_ell = areaframe_ell[0:rows,start:stop]
         areaframe_ell = np.concatenate((areaframe_ell,calib),axis=1)
         frame_bool = ((areaframe_ell-threshold)>=0)
         img_add = np.multiply(areaframe_ell,frame_bool)
@@ -1078,7 +1113,7 @@ def on_press(key):
     except AttributeError:
         print()
 
-def checkframenum(test,cmap_usr):
+def checkframenum(test,cmap_usr,isdisplay):
     frame_num_cropped = load_area(test)[1]
     if test.fmc == 0:
         threshold = 50
@@ -1113,10 +1148,9 @@ def checkframenum(test,cmap_usr):
         print(i)
     print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
     print(int(frame_num_cropped))
-    # skip = True
     if skip == False:
-        check = comp_areavals(test)
-        if check:
+        check = comp_areavals(test,False)
+        if check or isdisplay:
             usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
             if usr == 'q':
                 return
@@ -1137,7 +1171,7 @@ def comp_frames(img,cmap_usr):
     show_window(noticks=True,winmax=True)
     return
 
-def comp_areavals(test):
+def comp_areavals(test,isprint):
     areaframe_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
     frame = np.load(areaframe_numpixels_filepath)
     num_rows,num_cols = frame.shape[0],frame.shape[1]
@@ -1153,11 +1187,41 @@ def comp_areavals(test):
     area_01 = calc_area(frame_01,None,threshold,test.spatial_calibration,'frame')
     area_02 = calc_area(frame_02,None,threshold,test.spatial_calibration,'frame')
     per_diff = np.abs((area_01-area_02)/area_01)*100
-    if per_diff >= 10:
-        print('Test number: ',test.testnumber)
+    if isprint:
+        print('\nTest number: ',test.testnumber)
         print('Area01: ',round(area_01,4),' cm^2')
         print('Area02: ',round(area_02,4),' cm^2')
         print('Percent difference: ',round(per_diff,2),'\n')
+        fpath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+        if os.path.exists(fpath):
+            img = np.load(fpath)
+            areas = calc_area(img,None,threshold,test.spatial_calibration,'frame')
+            if isinstance(areas,list):
+                area_01,area_02 = areas[0],areas[1]
+            else:
+                area_02 = areas
+            per_diff = np.abs((area_01-area_02)/area_01)*100
+            print('----Updated area----')
+            print('Test number: ',test.testnumber)
+            print('Area01_original: ',round(area_01,4),' cm^2')
+            print('Area01_updated: ',round(area_02,4),' cm^2')
+    if per_diff >= 10:
+        if isprint == False:
+            print('\nTest number: ',test.testnumber)
+            print('Area01: ',round(area_01,4),' cm^2')
+            print('Area02: ',round(area_02,4),' cm^2')
+            print('Percent difference: ',round(per_diff,2),'\n')
+
+            fpath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+            if os.path.exists(fpath):
+                img = np.load(fpath)
+                areas = calc_area(img,None,threshold,test.spatial_calibration,'frame')
+                per_diff = np.abs((areas[0]-areas[1])/areas[0])*100
+                print('----Updated area----')
+                print('Test number: ',test.testnumber)
+                print('Area01: ',round(areas[0],4),' cm^2')
+                print('Area02: ',round(areas[1],4),' cm^2')
+                print('Percent difference: ',round(per_diff,2),'\n---------')
         return True
     return False
 
@@ -1245,8 +1309,12 @@ def selectarea(test):
     img = np.load(areaframe_uncropped_filepath)
     ell_filepath = os.getcwd() + '_cache\\flame_area\\ell\\' + test.filename.replace('.tif','_ell.npy')
     areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    compare,initial = comp_areavals(test,False),True
     if os.path.exists(areaframe_ell_path) == True:
-        img = np.load(areaframe_ell_path)
+        img,initial = np.load(areaframe_ell_path),False
+    if compare == True and initial == True:
+        fpath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
+        img = np.load(fpath)
     running,count = True,0
     while running:
         p = get_points(img,test,'selectarea')[0]
@@ -1275,11 +1343,13 @@ def selectarea(test):
         plt.imshow(img_new)
         show_window(noticks=True,winmax=True)
         count+=1
-        usr = input('Would you like to continue selecting areas? (y/n)')
+        usr = input('Would you like to continue selecting areas? (y/n/q)')
         if usr == 'n':
             running = False
         elif usr == 'y':
             img = img_new
+        elif usr == 'q':
+            return 999
     np.save(ell_filepath,ell_list)
     np.save(areaframe_ell_path,img_new)
     return
@@ -1288,7 +1358,7 @@ def edit_frame(img_new,ell,inf):
     c,w,h = inf[0],inf[1],inf[2]
     x = int(c[0]-w/2)
     y = int(c[1]-h/2)
-    print(x,y)
+    # print(x,y)
     for i in range(int(w)):
         for j in range(int(h)):
             ispoint = ell.contains_point([x+i,y+j])

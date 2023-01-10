@@ -320,7 +320,14 @@ def run_validatearea(sets,data,cmap):
         if usr == 'm':
             loop_handl(sets,data,'displayarea',args=[cmap])
         elif usr == 'n':
-            loop_handl(sets,data,'checkframenum',args=[cmap])
+            ans = input('Would you like to display frames? (y/n)')
+            if ans == 'y':
+                isdisplay = True
+            elif ans == 'n':
+                isdisplay = False
+            else:
+                isdisplay = None
+            loop_handl(sets,data,'checkframenum',args=[cmap,isdisplay])
         elif usr == 's':
             loop_handl(sets,data,'satpercent',None)
         elif usr == 'p':
@@ -328,7 +335,14 @@ def run_validatearea(sets,data,cmap):
         elif usr == 'a':
             loop_handl(sets,data,'selectarea',None)
         elif usr =='v':
-            loop_handl(sets,data,'comp_areavals',None)
+            ans = input('Would you like to print all values? (y/n)')
+            if ans == 'y':
+                isprint = True
+            elif ans == 'n':
+                isprint = False
+            else:
+                isprint = None
+            loop_handl(sets,data,'comp_areavals',args=[isprint])
             input('Hit \'Enter\' to continue')
         elif usr == 'b':
             running = False
@@ -415,7 +429,7 @@ def func_switch(test,tag,args):
     elif tag == 'displayarea':
         func_out = wf.displayarea(test,cmap_usr=args[0])
     elif tag == 'checkframenum':
-        func_out = wf.checkframenum(test,cmap_usr=args[0])
+        func_out = wf.checkframenum(test,cmap_usr=args[0],isdisplay=args[1])
     elif tag == 'satpercent':
         func_out = wf.calc_saturate(test)
     elif tag == 'numpixelsarea':
@@ -427,7 +441,7 @@ def func_switch(test,tag,args):
     elif tag == 'flamdur':
         func_out = test.eof-test.ignition_time[1]
     elif tag == 'comp_areavals':
-        func_out = wf.comp_areavals(test)
+        func_out = wf.comp_areavals(test,isprint=args[0])
     else:
         return func_out
     return func_out
