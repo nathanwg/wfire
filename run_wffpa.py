@@ -143,6 +143,8 @@ def run_createplots(sets,data,distance,ylim,showunc):
     print(' Plot max flame areas ------------ r')
     print(' Plot avg int of max flame areas - s')
     print(' Plot numpixels ------------------ n')
+    print(' Plot flaming duration ----------- d')
+    print( 'Go back ------------------------- b')
     usr = input('Selected option: ')
     if usr == 'p':
         run_plotprofiles(sets,data,distance,ylim)
@@ -167,9 +169,16 @@ def run_createplots(sets,data,distance,ylim,showunc):
         run_plot_ima(sets,data,showunc)
     elif usr == 'n':
         loop_handl(sets,data,'numpixelsarea',args=[False])
+    elif usr == 'd':
+        run_plotdur(sets,data,showunc)
+    elif usr == 'b':
+        return
     else:
         input('Error (hit \'Enter\' to continue)')
-        return
+
+def run_plotdur(sets,data,showunc):
+    durations = loop_handl(sets,data,'flamdur',None)
+    wf.plot_dur(sets,data,durations,showunc)
 
 def run_plotigtime(sets,data,showunc):
     igtimes = loop_handl(sets,data,'igtimes',None)
@@ -297,6 +306,7 @@ def run_validatearea(sets,data,cmap):
         print(' Check frame number ------------ n')
         print(' Calculate percent saturated --- s')
         print(' Check numpixel plot ----------- p')
+        print(' Compare area vals ------------- v')
         print(' Select area tool -------------- a')
         print(' Go back ----------------------- b')
         for i in range(0,len(sets),2):
@@ -317,6 +327,9 @@ def run_validatearea(sets,data,cmap):
             loop_handl(sets,data,'numpixelsarea',args=[True])
         elif usr == 'a':
             loop_handl(sets,data,'selectarea',None)
+        elif usr =='v':
+            loop_handl(sets,data,'comp_areavals',None)
+            input('Hit \'Enter\' to continue')
         elif usr == 'b':
             running = False
         else:
@@ -411,6 +424,10 @@ def func_switch(test,tag,args):
         func_out = wf.selectarea(test)
     elif tag == 'print_igtimes':
         print()
+    elif tag == 'flamdur':
+        func_out = test.eof-test.ignition_time[1]
+    elif tag == 'comp_areavals':
+        func_out = wf.comp_areavals(test)
     else:
         return func_out
     return func_out
