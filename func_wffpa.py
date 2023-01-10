@@ -1157,6 +1157,8 @@ def plot_numpixelsarea(test,showmax):
     plt.plot(x,areapixels,linewidth=0.5)
     plt.xlabel(xlabel)
     plt.ylabel('pixel area (cm$^2$)')
+    title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
+    plt.title(title)
     if showmax:
         frame_num_cropped = load_area(test)[1]
         frame_num_numpixels = np.load(areavals_numpixels_filepath)
