@@ -705,9 +705,10 @@ def plotmedians(sets,data,medians_sets,showunc):
     return
 
 def get_max_flame_area(test):
+    isinput=False
     afilepath = os.getcwd()+'_cache\\flame_area\\vals\\'+test.filename.replace('.tif','_area_vals.npy')
     mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
-    ischeck_m,ischeck_a = checkfile(mfilepath,test,checktype=True,isinput=True),checkfile(afilepath,test,checktype=True,isinput=True)
+    ischeck_m,ischeck_a = checkfile(mfilepath,test,True,isinput),checkfile(afilepath,test,True,isinput)
     if ischeck_m == False or ischeck_a == False:
         return None
     x_left,x_right,y_bot,y_top = load_gridpoints(test)
@@ -763,6 +764,7 @@ def load_area(test):
 def calc_area(ref_frame,filename,threshold,pixel_length,tag):      
     if tag == 'file':
         ref_frame = np.load(filename)
+    ref_frame = ref_frame.astype(float)
     x_bool = ((ref_frame-threshold)>=0)
     numpixels_frame = x_bool.sum()
     pixel_area = pixel_length**2
@@ -897,6 +899,22 @@ def plot_igtime(sets,data,igtimes,showunc):
     show_window(noticks=False,winmax=False)
     return
 
+def plot_dur(sets,data,dur,showunc):
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    dur_averages = []
+    for i in range(len(dur)):        
+        dur_averages.append(np.mean(dur[i]))
+        unc,cap = calc_uncertainty(dur[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],dur_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
+    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.ylabel('Average flaming duration (s)')
+    plt.title('Average flaming duration')
+    plt.legend()
+    show_window(noticks=False,winmax=False)
+    return
+
 def print_igtimes_avg(sets,data,igtimes):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
@@ -975,7 +993,7 @@ def checkfile(filepath,test,checktype,isinput):
     return
 
 def displayarea(test,cmap_usr):
-    show = True
+    show = False
     if test.fmc == 0:
         threshold = 50
     else:
@@ -1082,21 +1100,28 @@ def checkframenum(test,cmap_usr):
         np.save(numpixels_filepath,numpixels)
         np.save(areaframe_numpixels_filepath,img)
         np.save(areavals_numpixels_filepath,ind)
+        skip = True
     else:
+        skip = False
         areaframe_numpixels = np.load(areaframe_numpixels_filepath)
         img = areaframe_numpixels
         ind = np.load(areavals_numpixels_filepath)
     os.system('cls')
+    print(test.testnumber)
     print('Max area calculated without a rectangle being removed\n to represent the sample area is at frame number:')
     for i in ind:
         print(i)
     print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
     print(int(frame_num_cropped))
-    usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
-    if usr == 'q':
-        return
-    else:
-        comp_frames(img,cmap_usr)
+    # skip = True
+    if skip == False:
+        check = comp_areavals(test)
+        if check:
+            usr = input('\nPress \'Enter\' to compare frames (or enter \'q\' to continue): ')
+            if usr == 'q':
+                return
+            else:
+                comp_frames(img,cmap_usr)
     return
 
 def comp_frames(img,cmap_usr):
@@ -1111,6 +1136,31 @@ def comp_frames(img,cmap_usr):
     plt.title('Left: frame of max area (based on numpixels with cropped rectangle removal). Right: frame of max area (based on numpixels)')
     show_window(noticks=True,winmax=True)
     return
+
+def comp_areavals(test):
+    areaframe_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
+    frame = np.load(areaframe_numpixels_filepath)
+    num_rows,num_cols = frame.shape[0],frame.shape[1]
+    if num_cols > 512:
+        num_cols = 512
+    cols = int(num_cols/2)
+    frame_01 = frame[0:num_rows,0:cols]
+    frame_02 = frame[0:num_rows,cols:num_cols]
+    if test.fmc != 0:
+        threshold = 35
+    elif test.fmc == 0:
+        threshold = 50
+    area_01 = calc_area(frame_01,None,threshold,test.spatial_calibration,'frame')
+    area_02 = calc_area(frame_02,None,threshold,test.spatial_calibration,'frame')
+    per_diff = np.abs((area_01-area_02)/area_01)*100
+    if per_diff >= 10:
+        print('Test number: ',test.testnumber)
+        print('Area01: ',round(area_01,4),' cm^2')
+        print('Area02: ',round(area_02,4),' cm^2')
+        print('Percent difference: ',round(per_diff,2),'\n')
+        return True
+    return False
+
 
 def change_cmap(cmap):
     os.system('cls')
