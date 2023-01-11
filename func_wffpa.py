@@ -30,7 +30,7 @@ def importdata(datafile='data.txt',namesfile='filenames.txt'):
         if set_[i] == 0 or set_[i] == 1:
             stype = 'individual'
         elif set_[i] == 2:
-            stype = 'multiple'
+            stype = 'groups'
         else:
             stype = None
         ig_test = Test(filename,(month[i],day[i],year[i]),testnum[i],(stype,orientation[i],height[i],temp[i]),fmc[i],(time[i],int(frame[i])),spatial[i],eof[i])
@@ -979,7 +979,7 @@ def get_plotinfo(sets,data):
             elif labeldried == False:
                 labels.append('Oven-dried fuel-'+test.set_type[0])
                 labeldried = True
-        elif test.fmc != 0 and test.set_type[0] == 'multiple':
+        elif test.fmc != 0 and test.set_type[0] == 'groups':
             linestyle.append('g^')
             if labellive_m == True:
                 labels.append(None)
