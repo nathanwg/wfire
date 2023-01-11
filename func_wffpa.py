@@ -1340,15 +1340,29 @@ def selectarea(test):
             ell = pat.Ellipse(center,w,h,edgecolor='black',facecolor='none')
             img_new = edit_frame(img,ell,[center,w,h])
     
-        plt.imshow(img_new)
+        #------ 
+        threshold = get_threshold(test.fmc)
+        num_rows = img_new.shape[0]
+        calib = np.zeros((num_rows,1))
+        calib[0,0] = 255
+        dis_img = np.concatenate((img_new,calib),axis=1)
+        dis_bool = ((dis_img - threshold)>=0)
+        dis_new = np.multiply(dis_img,dis_bool)
+        imgshow = np.concatenate((img_new,dis_new),axis=1)
+        #--------
+
+        plt.imshow(imgshow,cmap='nipy_spectral_r')
         show_window(noticks=True,winmax=True)
         count+=1
+        print(test.testnumber)
         usr = input('Would you like to continue selecting areas? (y/n/q)')
         if usr == 'n':
             running = False
         elif usr == 'y':
             img = img_new
         elif usr == 'q':
+            np.save(ell_filepath,ell_list)
+            np.save(areaframe_ell_path,img_new)
             return 999
     np.save(ell_filepath,ell_list)
     np.save(areaframe_ell_path,img_new)
