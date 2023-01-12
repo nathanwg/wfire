@@ -984,14 +984,14 @@ def get_plotinfo(sets,data):
             if labellive_m == True:
                 labels.append(None)
             elif labellive_m == False:
-                labels.append('Live fuel-'+test.set_type[0])
+                labels.append(test.set_type[0])
                 labellive_m = True
         elif test.fmc != 0 and test.set_type[0] == 'individual':
             linestyle.append('bo')
             if labellive_i == True:
                 labels.append(None)
             elif labellive_i == False:
-                labels.append('Live fuel-'+test.set_type[0])
+                labels.append(test.set_type[0])
                 labellive_i = True
     return labels,temperatures,linestyle
 
