@@ -1270,7 +1270,7 @@ def plot_numpixelsarea(test,showmax):
 
     plt.plot(x,areapixels,linewidth=0.5)
     plt.xlabel(xlabel)
-    plt.ylabel('pixel area (cm$^2$)')
+    plt.ylabel('combustion area (cm$^2$)')
     title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
     plt.title(title)
     if showmax:
