@@ -913,15 +913,19 @@ def plot_igtime(sets,data,igtimes,showunc):
     """
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     igtimes_averages = []
+    plt.figure(figsize=[9,7],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
     for i in range(len(igtimes)):        
         igtimes_averages.append(np.mean(igtimes[i]))
         unc,cap = calc_uncertainty(igtimes[i],10),4
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],igtimes_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
-    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
     plt.ylabel('Average ignition time (s)')
-    plt.title('Average ignition times')
+    # plt.title('Average ignition times')
     plt.legend()
     show_window(noticks=False,winmax=False)
     return
@@ -929,15 +933,19 @@ def plot_igtime(sets,data,igtimes,showunc):
 def plot_dur(sets,data,dur,showunc):
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     dur_averages = []
+    plt.figure(figsize=[9,7],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
     for i in range(len(dur)):        
         dur_averages.append(np.mean(dur[i]))
         unc,cap = calc_uncertainty(dur[i],10),4
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],dur_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
-    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
     plt.ylabel('Average flaming duration (s)')
-    plt.title('Average flaming duration')
+    # plt.title('Average flaming duration')
     plt.legend()
     show_window(noticks=False,winmax=False)
     return
@@ -1268,11 +1276,15 @@ def plot_numpixelsarea(test,showmax):
     pixel_area = pixel_length**2
     areapixels = numpixels*pixel_area # cm^2
 
+    plt.figure(figsize=[10,7],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
     plt.plot(x,areapixels,linewidth=0.5)
     plt.xlabel(xlabel)
     plt.ylabel('combustion area (cm$^2$)')
     title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
-    plt.title(title)
+    # plt.title(title)
     if showmax:
         frame_num_cropped = load_area(test)[1]
         frame_num_numpixels = np.load(areavals_numpixels_filepath)
@@ -1280,7 +1292,7 @@ def plot_numpixelsarea(test,showmax):
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
-    show_window(noticks=False,winmax=True)
+    show_window(noticks=False,winmax=False)
     return
 
 def change_errbar(showunc):
