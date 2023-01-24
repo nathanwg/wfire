@@ -190,7 +190,10 @@ def get_points(img,test,points_type):
     calib[0,0] = 4500
     if points_type != 'selectarea':
         img = np.concatenate((img,calib),axis=1)
-    plt.imshow(img)
+    if points_type == 'selectarea':
+        plt.imshow(img,cmap='nipy_spectral_r')
+    else:
+        plt.imshow(img)
     plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid' or points_type == 'selectarea':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
@@ -756,7 +759,7 @@ def load_area(test):
 
     areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
     if os.path.exists(areaframe_ell_path) and newvals:
-        threshold = get_threshold(test.fmc)
+        threshold = get_threshold(test,test.fmc,'area')
         areas = calc_area(None,areaframe_ell_path,threshold,test.spatial_calibration,'file')
         if isinstance(areas,list):
             if areas[0] > areas[1]:
@@ -787,11 +790,16 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
         flame_area = pixel_area*numpixels_frame*(100**2)
         return flame_area
 
-def get_threshold(fmc):
-    if fmc == 0:
-        threshold = 50
-    else:
-        threshold = 35
+def get_threshold(test,fmc,tag):
+    if tag == 'area':
+        fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
+        thresholds = np.load(fpath)
+        threshold = thresholds[int(test.testnumber-1)]
+    elif tag == 'other':
+        if fmc == 0:
+            threshold = 50
+        else:
+            threshold = 35
     return threshold
 
 def get_ima(test):
@@ -1327,9 +1335,18 @@ def selectarea(test):
     if compare == True and initial == True:
         fpath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
         img = np.load(fpath)
+
+    threshold = get_threshold(test,test.fmc,'area')
+    num_rows = img.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = 255
+    dis_img = np.concatenate((img,calib),axis=1)
+    dis_bool = ((dis_img - threshold)>=0)
+    dis_new = np.multiply(dis_img,dis_bool)
+
     running,count = True,0
     while running:
-        p = get_points(img,test,'selectarea')[0]
+        p = get_points(dis_new,test,'selectarea')[0]
         pfilepath = os.getcwd() + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
         left,right,bottom,top=p[0][0],p[0][1],p[1][0],p[1][1]
         center = [(left+right)/2,(bottom+top)/2]
@@ -1353,7 +1370,7 @@ def selectarea(test):
             img_new = edit_frame(img,ell,[center,w,h])
     
         #------ 
-        threshold = get_threshold(test.fmc)
+        threshold = get_threshold(test,test.fmc,'area')
         num_rows = img_new.shape[0]
         calib = np.zeros((num_rows,1))
         calib[0,0] = 255
@@ -1367,17 +1384,43 @@ def selectarea(test):
         show_window(noticks=True,winmax=True)
         count+=1
         print(test.testnumber)
-        usr = input('Would you like to continue selecting areas? (y/n/q)')
+        print()
+        usr = input(' Would you like to continue selecting areas? (y/n/q) \n(If you would like to adjust the threshold, input \'a\' instead): ')
         if usr == 'n':
             running = False
         elif usr == 'y':
             img = img_new
+        elif usr == 'a':
+            change_threshold(test)         
         elif usr == 'q':
             np.save(ell_filepath,ell_list)
             np.save(areaframe_ell_path,img_new)
             return 999
     np.save(ell_filepath,ell_list)
     np.save(areaframe_ell_path,img_new)
+    return
+
+def change_threshold(test):
+    ref_num = int(test.testnumber-1)
+    fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
+    thresholds = np.load(fpath)
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------')
+    print('The current threshold is ',thresholds[ref_num])
+    usr = input('Would you like to add or subtract from the threshold? (a/s)')
+    if usr == 'a':
+        msg,mult = 'add to',1
+    elif usr == 's':
+        msg,mult = 'subtract from',-1
+    else:
+        input('Error')
+        return
+    msg = 'How much would you like to '+msg+' the threshold?: '
+    adj = int(input(msg))
+    input(adj)
+    thresholds[ref_num] = thresholds[ref_num] + adj*mult
+    input(thresholds[ref_num])
+    np.save(fpath,thresholds)
     return
 
 def edit_frame(img_new,ell,inf):
