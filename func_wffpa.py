@@ -772,7 +772,8 @@ def load_area(test):
         print('\nTest number ',test.testnumber,' is using an outdated area')
     return max_flamearea,frame_num     
 
-def calc_area(ref_frame,filename,threshold,pixel_length,tag):      
+def calc_area(ref_frame,filename,threshold,pixel_length,tag):
+    check_frames = False       
     pixel_area = pixel_length**2
     if tag == 'file':
         ref_frame = np.load(filename)
@@ -781,11 +782,27 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
     if rows != cols:
         ref_frame01,ref_frame02 = ref_frame[0:rows,0:int(cols/2)],ref_frame[0:rows,int(cols/2):cols]
         x_bool01,x_bool02 = ((ref_frame01-threshold)>=0),((ref_frame02-threshold)>=0)
+        if check_frames:
+            dis_frame01 = np.multiply(ref_frame01,x_bool01)
+            dis_frame02 = np.multiply(ref_frame02,x_bool02)
+            dis_show = np.concatenate((dis_frame01,dis_frame02),axis=1)
+            plt.imshow(dis_show,cmap='nipy_spectral_r')
+            plt.title('Checking frame')
+            show_window(noticks=True,winmax=True)
         numpixels_frame01,numpixels_frame02 = x_bool01.sum(),x_bool02.sum()
+        if numpixels_frame01 > numpixels_frame02:
+            numpixels_frame = numpixels_frame01
+        else:
+            numpixels_frame = numpixels_frame02
         flame_area01,flame_area02 = pixel_area*numpixels_frame01*(100**2),pixel_area*numpixels_frame02*(100**2)
         return [flame_area01,flame_area02]
     else:
         x_bool = ((ref_frame-threshold)>=0)
+        if check_frames:
+            dis_show = np.multiply(ref_frame,x_bool)
+            plt.imshow(dis_show,cmap='nipy_spectral_r')
+            plt.title('Checking frame')
+            show_window(noticks=True,winmax=True)
         numpixels_frame = x_bool.sum()
         flame_area = pixel_area*numpixels_frame*(100**2)
         return flame_area
@@ -803,22 +820,52 @@ def get_threshold(test,fmc,tag):
     return threshold
 
 def get_ima(test):
+    check_frames = False
     mfilepath = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_cropped.npy')
-    ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
-    if ischeck == False:
-        return 999
-    m_frame = np.load(mfilepath)
-    fmc = test.fmc
-    if fmc == 0:
-        threshold = 50
+    areaframe_ell_path = os.getcwd()+'_cache\\flame_area\\frames\\'+test.filename.replace('.tif','_areaframe_ell.npy')
+    if os.path.exists(areaframe_ell_path):
+        areaframe_ell = np.load(areaframe_ell_path)
+        m_frame = areaframe_ell
+        m_frame = m_frame.astype(float)
+        threshold = get_threshold(test,None,'area')
+        # input(threshold)
     else:
-        threshold = 35
-    x_bool = ((m_frame-threshold)>=0)
-    numpixels_frame = x_bool.sum()
+        print('Using outdated data')
+        ischeck = checkfile(mfilepath,test,checktype=False,isinput=True)
+        if ischeck == False:
+            return 999
+        m_frame = np.load(mfilepath)
+        fmc = test.fmc
+        if fmc == 0:
+            threshold = 50
+        else:
+            threshold = 35
+
+    rows,cols = m_frame.shape[0],m_frame.shape[1]
+    if rows != cols:
+        m_frame01,m_frame02 = m_frame[0:rows,0:int(cols/2)],m_frame[0:rows,int(cols/2):cols]
+        x_bool01,x_bool02 = ((m_frame01-threshold)>=0),((m_frame02-threshold)>=0)
+        if check_frames:
+            dis_frame01 = np.multiply(m_frame01,x_bool01)
+            dis_frame02 = np.multiply(m_frame02,x_bool02)
+            dis_show = np.concatenate((dis_frame01,dis_frame02),axis=1)
+        numpixels_frame01,numpixels_frame02 = x_bool01.sum(),x_bool02.sum()
+        if numpixels_frame01 > numpixels_frame02:
+            numpixels_frame,x_bool,m_frame = numpixels_frame01,x_bool01,m_frame01
+        else:
+            numpixels_frame,x_bool,m_frame = numpixels_frame02,x_bool02,m_frame02
+    else:
+        x_bool = ((m_frame-threshold)>=0)
+        numpixels_frame = x_bool.sum()
+        dis_show = np.multiply(m_frame,x_bool)
+    if check_frames:
+        plt.imshow(dis_show,cmap='nipy_spectral_r')
+        plt.title('Checking frame')
+        show_window(noticks=True,winmax=True)
+
     y_mod = np.multiply(m_frame,x_bool)
     total = y_mod.sum()
     ima = total/numpixels_frame
-    # print('Average intensity of maximmum flame area: ',ima)
     return ima
         
             
