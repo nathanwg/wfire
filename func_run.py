@@ -4,7 +4,7 @@ import os
 import time
 import run_wffpa
 
-def run_heatmap_g(sets,data):
+def run_heatmap_g(sets,data,map_type):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print(' This will generate heatmaps for the following sets:')
@@ -20,7 +20,7 @@ def run_heatmap_g(sets,data):
         thresh = 50
     else:
         print('Error')
-    func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save])
+    func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
     return func
 
 def run_heatmap_d(sets,heat_maps,data):
@@ -30,7 +30,14 @@ def run_heatmap_d(sets,heat_maps,data):
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
 
-    run_wffpa.loop_handl(sets,data,'displaymap',None)
+    usr = input('Would you like to display heatmaps for complete tests or pre-ignition? (c/p): ')
+    if usr == 'c':
+        map_type = 'all'
+    elif usr == 'p':
+        map_type = 'preig'
+    else:
+        return
+    run_wffpa.loop_handl(sets,data,'displaymap',[map_type])
     return
 
 def run_selectpoints_s(sets,data):

@@ -13,13 +13,17 @@ def run_heatmap(sets,data):
     while running is True:
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------','\n')
-        print(' Generate heatmap ---- g','\n','Display heatmap ----- d')
-        print(' Go back ------------- b')
+        print(' Generate heatmap ------------------- g')
+        print(' Display heatmap -------------------- d')
+        print(' Generate pre-ignition heatmap ------ p')
+        print(' Go back ---------------------------- b')
         usr = input('Selected option: ')
         if usr == 'g':
-            heat_maps = rn.run_heatmap_g(sets,data)
+            heat_maps = rn.run_heatmap_g(sets,data,'all')
         elif usr == 'd':
             rn.run_heatmap_d(sets,heat_maps,data)
+        elif usr == 'p':
+            rn.run_heatmap_g(sets,data,'preig')
         elif usr == 'b':
             running = False
     return heat_maps
@@ -420,10 +424,10 @@ def func_switch(test,tag,args):
     elif tag == 'igtimes':
         func_out = test.ignition_time[1]
     elif tag == 'getmap':
-        func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0])
+        func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0],map_type=args[2])
     elif tag == 'displaymap':
-        heatmap = wf.load_heatmap(test)
-        func_out = wf.displaymaps(heatmap)
+        heatmap = wf.load_heatmap(test,args[0])
+        func_out = wf.displaymaps(heatmap,args[0])
     elif tag == 'showig':
         wf.show_ignition(test)
     elif tag == 'displayarea':

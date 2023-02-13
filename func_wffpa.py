@@ -117,14 +117,17 @@ def show_ignition(test):
     frames = img[1]
     show_frames(frames,test.ignition_time[1],test.eof)
 
-def get_heatmaps(test,save,thresh):
+def get_heatmaps(test,save,thresh,map_type):
     """.....
     """
     print(test.testnumber)
     name = test.filename.replace('.tif','')
     cwd = os.getcwd()
-    cwd = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
-    ischeck = checkfile(cwd,test,checktype=True,isinput=True)
+    if map_type == 'all':
+        savepath = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
+    elif map_type == 'preig':
+        savepath = cwd+'_cache\\heatmaps\\preig\\' + test.filename.replace('.tif','_preig_heatmap.npy')
+    ischeck = checkfile(savepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     filepath = os.getcwd().replace('wfire','') + test.filename
@@ -138,13 +141,15 @@ def get_heatmaps(test,save,thresh):
         arr = (j-thresh)>0
         heatmap+=arr
         frame_num += 1
-        if frame_num > test.eof:
+        if map_type == 'preig' and frame_num >= test.ignition_time[1]:
+            break
+        if map_type == 'all' and frame_num > test.eof:
             break
     if save is True:
-        np.save(cwd,heatmap)
+        np.save(savepath,heatmap)
     return None
 
-def displaymaps(heatmap):
+def displaymaps(heatmap,map_type):
     """...
     """
     usr = input('Continue (\'b\' to go back)')
@@ -155,7 +160,10 @@ def displaymaps(heatmap):
     num_rows = heatmap.shape[0]
     calib = np.zeros((num_rows,1))
     calib[0,0] = 4500
-    imgs = np.concatenate((heatmap,calib),axis=1)
+    if map_type == 'all':
+        imgs = np.concatenate((heatmap,calib),axis=1)
+    else:
+        imgs = heatmap
     plt.imshow(imgs,cmap='nipy_spectral_r')
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
@@ -295,12 +303,17 @@ def choose_preset(sets):
             sets_new.append(var[j])
     return sets_new
 
-def load_heatmap(test):
+def load_heatmap(test,map_type):
     """...
     """
     pathname = test.filename.replace('.tif','')
     cwd = os.getcwd()
-    path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
+    if map_type == 'all':
+        path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
+    elif map_type == 'preig':
+        path = cwd+'_cache\\heatmaps\\preig\\'+pathname+'_preig_heatmap.npy'
+    else:
+        return None
     msg = 'You can create this file by generating a heatmap'
     ischeck = checkfile(path,test,checktype=False,isinput=True)
     if ischeck == False:
