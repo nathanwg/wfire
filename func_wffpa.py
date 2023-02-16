@@ -127,6 +127,8 @@ def get_heatmaps(test,save,thresh,map_type):
         savepath = cwd+'\\heatmaps\\'+name+'_heatmap.npy'
     elif map_type == 'preig':
         savepath = cwd+'_cache\\heatmaps\\preig\\' + test.filename.replace('.tif','_preig_heatmap.npy')
+    elif map_type == 'ig':
+        savepath = cwd+'_cache\\heatmaps\\ig\\' + test.filename.replace('.tif','_ig_heatmap.npy')
     ischeck = checkfile(savepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -135,16 +137,24 @@ def get_heatmaps(test,save,thresh,map_type):
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
     heatmap = np.zeros((num_rows,num_cols))
     frame_num = 0
+    ignition_frame = test.ignition_time[1]
+    fps = 500
+    ig_end = ignition_frame + 0.5*fps
     print('threshold value: ',thresh)
     for j in frames:
         j = j.astype(float)
         arr = (j-thresh)>0
-        heatmap+=arr
+        if map_type == 'ig' and frame_num >= ignition_frame:
+            heatmap+=arr
+        else:
+            heatmap+=arr
+        if map_type == 'preig' and frame_num >= ignition_frame:
+            break
+        elif map_type == 'all' and frame_num > test.eof:
+            break
+        elif map_type == 'ig' and frame_num >= ig_end:
+            break
         frame_num += 1
-        if map_type == 'preig' and frame_num >= test.ignition_time[1]:
-            break
-        if map_type == 'all' and frame_num > test.eof:
-            break
     if save is True:
         np.save(savepath,heatmap)
     return None
@@ -312,6 +322,8 @@ def load_heatmap(test,map_type):
         path = cwd+'\\heatmaps\\'+pathname+'_heatmap.npy'
     elif map_type == 'preig':
         path = cwd+'_cache\\heatmaps\\preig\\'+pathname+'_preig_heatmap.npy'
+    elif map_type == 'ig':
+        path = cwd+'_cache\\heatmaps\\ig\\'+pathname+'_ig_heatmap.npy'
     else:
         return None
     msg = 'You can create this file by generating a heatmap'

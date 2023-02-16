@@ -30,11 +30,13 @@ def run_heatmap_d(sets,heat_maps,data):
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
 
-    usr = input('Would you like to display heatmaps for complete tests or pre-ignition? (c/p): ')
+    usr = input('Would you like to display heatmaps for the complete test, pre-ignition, or ignition? (c/p/i): ')
     if usr == 'c':
         map_type = 'all'
     elif usr == 'p':
         map_type = 'preig'
+    elif usr == 'i':
+        map_type = 'ig'
     else:
         return
     run_wffpa.loop_handl(sets,data,'displaymap',[map_type])

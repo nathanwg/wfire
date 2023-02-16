@@ -16,6 +16,7 @@ def run_heatmap(sets,data):
         print(' Generate heatmap ------------------- g')
         print(' Display heatmap -------------------- d')
         print(' Generate pre-ignition heatmap ------ p')
+        print(' Generate ignition heatmap ---------- i')
         print(' Go back ---------------------------- b')
         usr = input('Selected option: ')
         if usr == 'g':
@@ -24,6 +25,8 @@ def run_heatmap(sets,data):
             rn.run_heatmap_d(sets,heat_maps,data)
         elif usr == 'p':
             rn.run_heatmap_g(sets,data,'preig')
+        elif usr ==  'i':
+            rn.run_heatmap_g(sets,data,'ig')
         elif usr == 'b':
             running = False
     return heat_maps
