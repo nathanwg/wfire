@@ -1023,6 +1023,8 @@ def plot_dur(sets,data,dur,showunc):
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],dur_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
+        print('Temp: ',temperatures[i],'\nDuration: ',dur_averages[i]/500)
+    input()
     plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
     plt.ylabel('Average flaming duration (s)')
     # plt.title('Average flaming duration')
@@ -1030,7 +1032,6 @@ def plot_dur(sets,data,dur,showunc):
     show_window(noticks=False,winmax=False)
     return
 
-def print_igtimes_avg(sets,data,igtimes):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     igtimes_averages = []
@@ -1507,3 +1508,24 @@ def edit_frame(img_new,ell,inf):
                 img_new[y+j][x+i]=0
     return img_new
 
+def calc_centerpoints(test):
+    fname = os.getcwd().replace('wfire','') + test.filename
+    threshold = get_threshold(test,test.fmc,tag='other')
+    numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
+    centerpoints = np.zeros((num_frames,3))
+    for i in range(num_frames):
+        if numpixels[i] != 0:
+            ref_frame = frames[i].astype(float)
+            bool_frame = ((ref_frame-threshold)>0)
+            inds = np.where(bool_frame==True)
+            xavg = np.average(inds[0])
+            yavg = np.average(inds[1])
+            mag = np.sqrt(xavg**2+yavg**2)
+            centerpoints[i] = [xavg,yavg,mag]
+    x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
+    x/=500
+    plt.plot(x,centerpoints[:,0],linewidth=0.5)
+    plt.plot(x,centerpoints[:,1],linewidth=0.5)
+    plt.plot(x,centerpoints[:,2],linewidth=0.5)
+    show_window(noticks=False,winmax=False)
+    return

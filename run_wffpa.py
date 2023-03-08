@@ -215,6 +215,7 @@ def run_tools(sets,data):
         print(' Heatmaps ------------ h','\n','Select points ------- s')
         print(' Flame area ---------- a')
         print(' Display data values - d')
+        print(' Center of points ---- c (tool in beta stage)')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
         for i in range(0,len(sets),2):
@@ -233,6 +234,8 @@ def run_tools(sets,data):
             run_flamearea(sets,data)
         elif usr_func == 'd':
             run_displaydata(sets,data)
+        elif usr_func == 'c':
+            loop_handl(sets,data,tag='centerpoints',args=None)
         elif usr_func == 'b':
             return
         else:
@@ -449,6 +452,8 @@ def func_switch(test,tag,args):
         func_out = test.eof-test.ignition_time[1]
     elif tag == 'comp_areavals':
         func_out = wf.comp_areavals(test,isprint=args[0])
+    elif tag == 'centerpoints':
+        func_out = wf.calc_centerpoints(test)
     else:
         return func_out
     return func_out
