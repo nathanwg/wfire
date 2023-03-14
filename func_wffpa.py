@@ -139,27 +139,38 @@ def get_heatmaps(test,save,thresh,map_type):
     frame_num = 0
     ignition_frame = test.ignition_time[1]
     fps = 500
-    ig_end = ignition_frame + 0.5*fps
+    # stop_frame = ignition_frame + 2*fps
+    stop_frame = test.eof
+    eoi_frame = ignition_frame + 0.05*fps
+    flame_step = 0
     print('threshold value: ',thresh)
     for j in frames:
         j = j.astype(float)
         arr = (j-thresh)>0
         if map_type == 'ig' and frame_num >= ignition_frame:
-            heatmap+=arr
+            # if frame_num <= eoi_frame:
+            #     arr = arr*400
+            # heatmap+=arr
+            heatmap_new = heatmap > 0
+            arr_new = (arr*1)-heatmap_new
+            arr_new_bool = arr_new > 0
+            arr_add = arr_new_bool*(flame_step*5)
+            heatmap+=arr_add
+            flame_step+=1
         else:
             heatmap+=arr
         if map_type == 'preig' and frame_num >= ignition_frame:
             break
         elif map_type == 'all' and frame_num > test.eof:
             break
-        elif map_type == 'ig' and frame_num >= ig_end:
+        elif map_type == 'ig' and frame_num >= stop_frame:
             break
         frame_num += 1
     if save is True:
         np.save(savepath,heatmap)
     return None
 
-def displaymaps(heatmap,map_type):
+def displaymaps(heatmap,map_type,cmap_usr):
     """...
     """
     usr = input('Continue (\'b\' to go back)')
@@ -174,10 +185,16 @@ def displaymaps(heatmap,map_type):
         imgs = np.concatenate((heatmap,calib),axis=1)
     else:
         imgs = heatmap
-    plt.imshow(imgs,cmap='nipy_spectral_r')
+    # if map_type == 'ig' and cmap_usr != 'Greys':
+    #     arr_bool = (heatmap-1) < 0
+    #     max_val = np.max(heatmap)
+    #     arr_new = arr_bool*(max_val+100)
+    #     imgs = heatmap+arr_new
+    plt.imshow(imgs,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
+    plt.colorbar()
     show_window(noticks=True,winmax=True)
     return True
 
@@ -1329,14 +1346,15 @@ def change_cmap(cmap):
     print(' 7 - nipy_spectral_r')
     print(' 8 - tab20')
     print(' 9 - Set3')
-    print(' 10 - turbo')
+    print(' 10 - greys')
+    print(' 11 - nipy_spectral')
     usr = input('Selected option: ')
     if usr == '':
         return cmap
     usr = int(usr)
     if usr < 1 or usr > 10:
         return cmap
-    cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','turbo']
+    cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','Greys','nipy_spectral']
     return cmaps[usr-1]
 
 def plot_numpixelsarea(test,showmax):

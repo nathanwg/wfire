@@ -7,7 +7,7 @@ import func_run as rn
 import numpy as np
 import os
 
-def run_heatmap(sets,data):
+def run_heatmap(sets,data,cmap):
     running = True
     heat_maps = None
     while running is True:
@@ -22,7 +22,7 @@ def run_heatmap(sets,data):
         if usr == 'g':
             heat_maps = rn.run_heatmap_g(sets,data,'all')
         elif usr == 'd':
-            rn.run_heatmap_d(sets,heat_maps,data)
+            rn.run_heatmap_d(sets,heat_maps,data,cmap)
         elif usr == 'p':
             rn.run_heatmap_g(sets,data,'preig')
         elif usr ==  'i':
@@ -206,7 +206,7 @@ def run_plotmedians(sets,data,showunc):
         medians_sets.append(medians)
     wf.plotmedians(sets,data,medians_sets,showunc)
 
-def run_tools(sets,data):
+def run_tools(sets,data,cmap):
     running,error = True, False
     while running is True:
         os.system('cls')
@@ -227,7 +227,7 @@ def run_tools(sets,data):
             print()
         usr_func = input('Selected option: ')
         if usr_func == 'h':
-            heat_maps = run_heatmap(sets,data)
+            heat_maps = run_heatmap(sets,data,cmap)
         elif usr_func == 's':
             run_selectpoints(sets,data)
         elif usr_func == 'a':
@@ -433,7 +433,7 @@ def func_switch(test,tag,args):
         func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0],map_type=args[2])
     elif tag == 'displaymap':
         heatmap = wf.load_heatmap(test,args[0])
-        func_out = wf.displaymaps(heatmap,args[0])
+        func_out = wf.displaymaps(heatmap,args[0],args[1])
     elif tag == 'showig':
         wf.show_ignition(test)
     elif tag == 'displayarea':
@@ -497,7 +497,7 @@ def main():
             print()
         usr_func = input(' Selected option: ')
         if usr_func == 't' or usr_func == 'T':
-            run_tools(sets,data)
+            run_tools(sets,data,cmap)
         elif usr_func == 'p' or usr_func == 'P':
             run_createplots(sets,data,distance,ylim,showunc)
         elif usr_func == 's' or usr_func == 'S':

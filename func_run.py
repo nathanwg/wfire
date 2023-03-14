@@ -23,7 +23,7 @@ def run_heatmap_g(sets,data,map_type):
     func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
     return func
 
-def run_heatmap_d(sets,heat_maps,data):
+def run_heatmap_d(sets,heat_maps,data,cmap):
     os.system('cls')
     print('\n\n\n\n\n','--------------------------------------------------','\n')
     print(' This will display heatmaps for the following test numbers:')
@@ -39,7 +39,7 @@ def run_heatmap_d(sets,heat_maps,data):
         map_type = 'ig'
     else:
         return
-    run_wffpa.loop_handl(sets,data,'displaymap',[map_type])
+    run_wffpa.loop_handl(sets,data,'displaymap',[map_type,cmap])
     return
 
 def run_selectpoints_s(sets,data):
