@@ -29,14 +29,27 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
     print(' This will display heatmaps for the following test numbers:')
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
-
-    usr = input('Would you like to display heatmaps for the complete test, pre-ignition, or ignition? (c/p/i): ')
+    print(' Complete test ------------------- c')
+    print(' Pre-ignition -------------------- p')
+    print(' Cumulative ignition ------------- i')
+    print(' Discrete ignition --------------- di')
+    print(' Discrete complete --------------- dc')
+    print(' Ignition location --------------- l')
+    print('\n')
+    usr = input('Please input which type of map you would like to display: ')
     if usr == 'c':
         map_type = 'all'
     elif usr == 'p':
         map_type = 'preig'
     elif usr == 'i':
         map_type = 'ig'
+    elif usr == 'di':
+        map_type = 'dis_ig'
+    elif usr == 'dc':
+        map_type = 'dis_c'
+    elif usr == 'l':
+        run_wffpa.loop_handl(sets,data,'igloc',[['preig','ig','dis_ig','dis_c'],cmap])
+        return
     else:
         return
     run_wffpa.loop_handl(sets,data,'displaymap',[map_type,cmap])

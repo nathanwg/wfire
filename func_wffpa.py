@@ -129,6 +129,10 @@ def get_heatmaps(test,save,thresh,map_type):
         savepath = cwd+'_cache\\heatmaps\\preig\\' + test.filename.replace('.tif','_preig_heatmap.npy')
     elif map_type == 'ig':
         savepath = cwd+'_cache\\heatmaps\\ig\\' + test.filename.replace('.tif','_ig_heatmap.npy')
+    elif map_type == 'dis_ig':
+        savepath = cwd+'_cache\\heatmaps\\dis_ig\\' + test.filename.replace('.tif','_disig_heatmap.npy')
+    elif map_type == 'dis_c':
+        savepath = cwd+'_cache\\heatmaps\\dis_c\\' + test.filename.replace('.tif','_disc_heatmap.npy')
     ischeck = checkfile(savepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -140,7 +144,7 @@ def get_heatmaps(test,save,thresh,map_type):
     ignition_frame = test.ignition_time[1]
     fps = 500
     # stop_frame = ignition_frame + 2*fps
-    stop_frame = test.eof
+    stop_frame = ignition_frame + 0.5*fps
     eoi_frame = ignition_frame + 0.05*fps
     flame_step = 0
     print('threshold value: ',thresh)
@@ -148,9 +152,17 @@ def get_heatmaps(test,save,thresh,map_type):
         j = j.astype(float)
         arr = (j-thresh)>0
         if map_type == 'ig' and frame_num >= ignition_frame:
-            # if frame_num <= eoi_frame:
-            #     arr = arr*400
-            # heatmap+=arr
+            if frame_num <= eoi_frame:
+                arr = arr*50
+            heatmap+=arr
+        elif map_type == 'dis_ig' and frame_num >= ignition_frame:
+            heatmap_new = heatmap > 0
+            arr_new = (arr*1)-heatmap_new
+            arr_new_bool = arr_new > 0
+            arr_add = arr_new_bool*(flame_step*5)
+            heatmap+=arr_add
+            flame_step+=1
+        elif map_type == 'dis_c' and frame_num >= ignition_frame:
             heatmap_new = heatmap > 0
             arr_new = (arr*1)-heatmap_new
             arr_new_bool = arr_new > 0
@@ -165,6 +177,10 @@ def get_heatmaps(test,save,thresh,map_type):
             break
         elif map_type == 'ig' and frame_num >= stop_frame:
             break
+        elif map_type == 'dis_ig' and frame_num >= stop_frame:
+            break
+        elif map_type == 'dis_c' and frame_num >= test.eof:
+            break
         frame_num += 1
     if save is True:
         np.save(savepath,heatmap)
@@ -178,23 +194,21 @@ def displaymaps(heatmap,map_type,cmap_usr):
         return 999
     if heatmap is None:
         input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
+        return 999
     num_rows = heatmap.shape[0]
     calib = np.zeros((num_rows,1))
     calib[0,0] = 4500
     if map_type == 'all':
+        # imgs = heatmap
         imgs = np.concatenate((heatmap,calib),axis=1)
     else:
         imgs = heatmap
-    # if map_type == 'ig' and cmap_usr != 'Greys':
-    #     arr_bool = (heatmap-1) < 0
-    #     max_val = np.max(heatmap)
-    #     arr_new = arr_bool*(max_val+100)
-    #     imgs = heatmap+arr_new
     plt.imshow(imgs,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    plt.colorbar()
+    # if map_type == 'ig':
+    #     plt.colorbar()
     show_window(noticks=True,winmax=True)
     return True
 
@@ -341,6 +355,10 @@ def load_heatmap(test,map_type):
         path = cwd+'_cache\\heatmaps\\preig\\'+pathname+'_preig_heatmap.npy'
     elif map_type == 'ig':
         path = cwd+'_cache\\heatmaps\\ig\\'+pathname+'_ig_heatmap.npy'
+    elif map_type == 'dis_ig':
+        path = cwd+'_cache\\heatmaps\\dis_ig\\'+pathname+'_disig_heatmap.npy'
+    elif map_type == 'dis_c':
+        path = cwd+'_cache\\heatmaps\\dis_c\\'+pathname+'_disc_heatmap.npy'
     else:
         return None
     msg = 'You can create this file by generating a heatmap'
@@ -349,6 +367,18 @@ def load_heatmap(test,map_type):
         return None
     heatmap = np.load(path)
     return heatmap
+
+def display_igloc(test,map_tags,cmap):
+    maps = []
+    for i in map_tags:
+        map = load_heatmap(test,i)
+        map = map/map.max()
+        maps.append(map)
+    img01,img02 = np.concatenate((maps[0],maps[1]),axis=1),np.concatenate((maps[2],maps[3]),axis=1)
+    imgs = np.concatenate((img01,img02),axis=0)
+    usr = displaymaps(imgs,'igloc',cmap)
+    return usr
+
 
 
 def save_points(test,p,num_points,points_type):

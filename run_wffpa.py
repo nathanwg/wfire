@@ -17,6 +17,8 @@ def run_heatmap(sets,data,cmap):
         print(' Display heatmap -------------------- d')
         print(' Generate pre-ignition heatmap ------ p')
         print(' Generate ignition heatmap ---------- i')
+        print(' Generate discrete ignition heatmap - di')
+        print(' Generate discrete complete heatmap - dc')
         print(' Go back ---------------------------- b')
         usr = input('Selected option: ')
         if usr == 'g':
@@ -27,6 +29,10 @@ def run_heatmap(sets,data,cmap):
             rn.run_heatmap_g(sets,data,'preig')
         elif usr ==  'i':
             rn.run_heatmap_g(sets,data,'ig')
+        elif usr == 'di':
+            rn.run_heatmap_g(sets,data,'dis_ig')
+        elif usr == 'dc':
+            rn.run_heatmap_g(sets,data,'dis_c')
         elif usr == 'b':
             running = False
     return heat_maps
@@ -433,7 +439,11 @@ def func_switch(test,tag,args):
         func_out = wf.get_heatmaps(test,save=args[1],thresh=args[0],map_type=args[2])
     elif tag == 'displaymap':
         heatmap = wf.load_heatmap(test,args[0])
+        if heatmap is None:
+            return 999
         func_out = wf.displaymaps(heatmap,args[0],args[1])
+    elif tag == 'loadmap':
+        heatmap = wf.load_heatmap(test,args[0])
     elif tag == 'showig':
         wf.show_ignition(test)
     elif tag == 'displayarea':
@@ -454,6 +464,8 @@ def func_switch(test,tag,args):
         func_out = wf.comp_areavals(test,isprint=args[0])
     elif tag == 'centerpoints':
         func_out = wf.calc_centerpoints(test)
+    elif tag == 'igloc':
+        func_out = wf.display_igloc(test,args[0],args[1])
     else:
         return func_out
     return func_out
