@@ -143,41 +143,28 @@ def get_heatmaps(test,save,thresh,map_type):
     frame_num = 0
     ignition_frame = test.ignition_time[1]
     fps = 500
-    # stop_frame = ignition_frame + 2*fps
-    stop_frame = ignition_frame + 0.5*fps
-    eoi_frame = ignition_frame + 0.05*fps
+    eoi_frame = ignition_frame + 0.5*fps # end of ignition period of interest
+    eow_frame = ignition_frame + 0.05*fps # end of weighted frames
     flame_step = 0
     print('threshold value: ',thresh)
     for j in frames:
         j = j.astype(float)
         arr = (j-thresh)>0
         if map_type == 'ig' and frame_num >= ignition_frame:
-            if frame_num <= eoi_frame:
-                arr = arr*50
-            heatmap+=arr
+            heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar=50) # when scalar is greater than 1, this will weight the frames before eow_frames by the scaled amount
         elif map_type == 'dis_ig' and frame_num >= ignition_frame:
-            heatmap_new = heatmap > 0
-            arr_new = (arr*1)-heatmap_new
-            arr_new_bool = arr_new > 0
-            arr_add = arr_new_bool*(flame_step*5)
-            heatmap+=arr_add
-            flame_step+=1
+            heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5) # the spacer helps set the discrete layers apart more or less (how much the color varies for each time step)
         elif map_type == 'dis_c' and frame_num >= ignition_frame:
-            heatmap_new = heatmap > 0
-            arr_new = (arr*1)-heatmap_new
-            arr_new_bool = arr_new > 0
-            arr_add = arr_new_bool*(flame_step*5)
-            heatmap+=arr_add
-            flame_step+=1
+            heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5)
         else:
-            heatmap+=arr
+            heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar=1)
         if map_type == 'preig' and frame_num >= ignition_frame:
             break
         elif map_type == 'all' and frame_num > test.eof:
             break
-        elif map_type == 'ig' and frame_num >= stop_frame:
+        elif map_type == 'ig' and frame_num >= eoi_frame:
             break
-        elif map_type == 'dis_ig' and frame_num >= stop_frame:
+        elif map_type == 'dis_ig' and frame_num >= eoi_frame:
             break
         elif map_type == 'dis_c' and frame_num >= test.eof:
             break
@@ -185,6 +172,83 @@ def get_heatmaps(test,save,thresh,map_type):
     if save is True:
         np.save(savepath,heatmap)
     return None
+
+def get_mapsets(test,thresh,save):
+    
+    print(test.testnumber)
+    name = test.filename.replace('.tif','')
+    cwd = os.getcwd()
+    
+    filepath_check = cwd+'_cache\\heatmaps\\sets\\' + name + '_sets01.npy'
+    ischeck = checkfile(filepath_check,test,checktype=True,isinput=True)
+    if ischeck == False:
+        return
+    
+    filepath = os.getcwd().replace('wfire','') + test.filename
+    img = readfile(filepath,True)[0]
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+    ignition_frame = test.ignition_time[1]
+    fps = 500
+    
+    item = 1
+
+    time_step = 0.1*fps
+    flame_step = 0
+    for i in range(5):
+        heatmap = np.zeros((num_rows,num_cols))
+        cut_start = int(ignition_frame+time_step*i)
+        cut_stop = int(cut_start+time_step)
+        frames_oi = frames[cut_start:cut_stop]
+        for j in frames_oi:
+            j = j.astype(float)
+            arr = (j-thresh)>0
+            heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5)
+        if save is True:
+            savepath = cwd+'_cache\\heatmaps\\sets\\' + name + '_sets0' + str(item) + '.npy'
+            np.save(savepath,heatmap)
+        item+=1
+    return None
+
+def map_discrete(heatmap,arr,flame_step,spacer):
+    heatmap_new = heatmap > 0
+    arr_new = (arr*1)-heatmap_new
+    arr_new_bool = arr_new > 0
+    arr_add = arr_new_bool*(flame_step*spacer)
+    heatmap+=arr_add
+    flame_step+=1
+    return heatmap,flame_step
+
+def map_cumulative(heatmap,arr,frame_num,eow_frame,scalar):
+    if frame_num <= eow_frame and scalar != 1:
+        arr = arr*scalar
+    heatmap+=arr
+
+def display_mapsets(test,cmap_usr):
+    cwd = os.getcwd()
+    name = test.filename.replace('.tif','')
+    item = 1
+    maps = []
+    for i in range(5):
+        loadpath = cwd+'_cache\\heatmaps\\sets\\' + name + '_sets0' + str(item) + '.npy'
+        map = np.load(loadpath)
+        maps.append(map)
+        plt.imshow(map,cmap=cmap_usr)
+        ax = plt.gca()
+        ax.axes.xaxis.set_visible(False)
+        ax.axes.yaxis.set_visible(False)
+        # plt.colorbar()
+        show_window(noticks=True,winmax=True)
+        item+=1
+    plt.close('all')
+    # img01,img02 = np.concatenate((maps[0],maps[1]),axis=1),np.concatenate((maps[2],maps[3]),axis=1)
+    # img = np.concatenate((img01,img02),axis=0)
+    # plt.imshow(img,cmap=cmap_usr)
+    # ax = plt.gca()
+    # ax.axes.xaxis.set_visible(False)
+    # ax.axes.yaxis.set_visible(False)
+    # # plt.colorbar()
+    # show_window(noticks=True,winmax=True)
+    return True
 
 def displaymaps(heatmap,map_type,cmap_usr):
     """...
@@ -1234,7 +1298,7 @@ def show_window(noticks,winmax):
         isfig = bool(plt.get_fignums())
         if isfig == False or listener.running == False:
             run = False
-    plt.close()
+    # plt.close()
     return
 
 def on_release(key):

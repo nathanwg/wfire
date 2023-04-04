@@ -20,39 +20,48 @@ def run_heatmap_g(sets,data,map_type):
         thresh = 50
     else:
         print('Error')
-    func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
+    if map_type == 'getsets':
+        func = run_wffpa.loop_handl(sets,data,'getsets',[thresh,save])
+    else:
+        func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
     return func
 
 def run_heatmap_d(sets,heat_maps,data,cmap):
-    os.system('cls')
-    print('\n\n\n\n\n','--------------------------------------------------','\n')
-    print(' This will display heatmaps for the following test numbers:')
-    for i in range(0,len(sets),2):
-        print(round(sets[i]),'-',round(sets[i+1]))
-    print(' Complete test ------------------- c')
-    print(' Pre-ignition -------------------- p')
-    print(' Cumulative ignition ------------- i')
-    print(' Discrete ignition --------------- di')
-    print(' Discrete complete --------------- dc')
-    print(' Ignition location --------------- l')
-    print('\n')
-    usr = input('Please input which type of map you would like to display: ')
-    if usr == 'c':
-        map_type = 'all'
-    elif usr == 'p':
-        map_type = 'preig'
-    elif usr == 'i':
-        map_type = 'ig'
-    elif usr == 'di':
-        map_type = 'dis_ig'
-    elif usr == 'dc':
-        map_type = 'dis_c'
-    elif usr == 'l':
-        run_wffpa.loop_handl(sets,data,'igloc',[['preig','ig','dis_ig','dis_c'],cmap])
-        return
-    else:
-        return
-    run_wffpa.loop_handl(sets,data,'displaymap',[map_type,cmap])
+    running = True
+    while running is True:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print(' This will display heatmaps for the following test numbers:')
+        for i in range(0,len(sets),2):
+            print(round(sets[i]),'-',round(sets[i+1]))
+        print(' Complete test ------------------- c')
+        print(' Pre-ignition -------------------- p')
+        print(' Cumulative ignition ------------- i')
+        print(' Discrete ignition --------------- di')
+        print(' Discrete complete --------------- dc')
+        print(' Ignition location --------------- l')
+        print(' Display sets -------------------- s')
+        print(' Go back ------------------------- b')
+        print('\n')
+        usr = input('Please input which type of map you would like to display: ')
+        if usr == 'c':
+            map_type = 'all'
+        elif usr == 'p':
+            map_type = 'preig'
+        elif usr == 'i':
+            map_type = 'ig'
+        elif usr == 'di':
+            map_type = 'dis_ig'
+        elif usr == 'dc':
+            map_type = 'dis_c'
+        elif usr == 'l':
+            run_wffpa.loop_handl(sets,data,'igloc',[['preig','ig','dis_ig','dis_c'],cmap])
+        elif usr == 's':
+            run_wffpa.loop_handl(sets,data,'display_mapsets',[cmap])
+        elif usr == 'b':
+            return
+        if usr != 's' and usr != 'l':
+            run_wffpa.loop_handl(sets,data,'displaymap',[map_type,cmap])
     return
 
 def run_selectpoints_s(sets,data):
