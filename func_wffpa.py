@@ -16,6 +16,7 @@ import matplotlib.animation as animation
 import func_wfipa
 import matplotlib.patches as pat
 from pynput import keyboard
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -194,7 +195,7 @@ def get_mapsets(test,thresh,save):
 
     time_step = 0.1*fps
     flame_step = 0
-    for i in range(5):
+    for i in range(6):
         heatmap = np.zeros((num_rows,num_cols))
         cut_start = int(ignition_frame+time_step*i)
         cut_stop = int(cut_start+time_step)
@@ -228,26 +229,39 @@ def display_mapsets(test,cmap_usr):
     name = test.filename.replace('.tif','')
     item = 1
     maps = []
-    for i in range(5):
+    loadpath = cwd+'_cache\\heatmaps\\sets\\' + name + '_sets06' + '.npy'
+    map = np.load(loadpath)
+    max_val = map.max()
+    xscalar = 0.6/max_val
+    num_rows = map.shape[0]
+    calib = np.zeros((num_rows,1))
+    calib[0,0] = max_val
+    for i in range(6):
         loadpath = cwd+'_cache\\heatmaps\\sets\\' + name + '_sets0' + str(item) + '.npy'
         map = np.load(loadpath)
+        map = np.concatenate((map,calib),axis=1)
+        map*=xscalar
         maps.append(map)
         plt.imshow(map,cmap=cmap_usr)
         ax = plt.gca()
         ax.axes.xaxis.set_visible(False)
         ax.axes.yaxis.set_visible(False)
-        # plt.colorbar()
+        plt.colorbar()
         show_window(noticks=True,winmax=True)
         item+=1
-    plt.close('all')
-    # img01,img02 = np.concatenate((maps[0],maps[1]),axis=1),np.concatenate((maps[2],maps[3]),axis=1)
-    # img = np.concatenate((img01,img02),axis=0)
-    # plt.imshow(img,cmap=cmap_usr)
-    # ax = plt.gca()
-    # ax.axes.xaxis.set_visible(False)
-    # ax.axes.yaxis.set_visible(False)
-    # # plt.colorbar()
-    # show_window(noticks=True,winmax=True)
+    img01 = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
+    img02 = np.concatenate((maps[3],maps[4],maps[5]),axis=1)
+
+    img = np.concatenate((img01,img02),axis=0)
+
+    plt.rcParams["figure.autolayout"] = True
+    plt.imshow(img,cmap=cmap_usr)
+    plt.colorbar()
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    show_window(noticks=True,winmax=True)
+
     return True
 
 def displaymaps(heatmap,map_type,cmap_usr):
@@ -1298,7 +1312,7 @@ def show_window(noticks,winmax):
         isfig = bool(plt.get_fignums())
         if isfig == False or listener.running == False:
             run = False
-    # plt.close()
+    plt.close()
     return
 
 def on_release(key):
@@ -1436,19 +1450,20 @@ def change_cmap(cmap):
     print(' 3 - turbo')
     print(' 4 - CMRmap')
     print(' 5 - flag')
-    print(' 6 - gist_ncar')
+    print(' 6 - gist_stern_r')
     print(' 7 - nipy_spectral_r')
     print(' 8 - tab20')
     print(' 9 - Set3')
     print(' 10 - greys')
     print(' 11 - nipy_spectral')
+    print(' 12 - gist_earth_r')
     usr = input('Selected option: ')
     if usr == '':
         return cmap
     usr = int(usr)
-    if usr < 1 or usr > 10:
+    if usr < 1 or usr > 12:
         return cmap
-    cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_ncar','nipy_spectral_r','tab20','Set3','Greys','nipy_spectral']
+    cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_stern_r','nipy_spectral_r','tab20','Set3','Greys','nipy_spectral','gist_earth_r']
     return cmaps[usr-1]
 
 def plot_numpixelsarea(test,showmax):
