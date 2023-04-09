@@ -19,7 +19,8 @@ def run_heatmap(sets,data,cmap):
         print(' Generate ignition heatmap ---------- i')
         print(' Generate discrete ignition heatmap - di')
         print(' Generate discrete complete heatmap - dc')
-        print(' Generate map sets ------------------ s')
+        print(' Generate map sets (discrete) ------- ds')
+        print(' Generate map sets (cumulative) ----- cs')
         print(' Go back ---------------------------- b')
         usr = input('Selected option: ')
         if usr == 'g':
@@ -34,8 +35,10 @@ def run_heatmap(sets,data,cmap):
             rn.run_heatmap_g(sets,data,'dis_ig')
         elif usr == 'dc':
             rn.run_heatmap_g(sets,data,'dis_c')
-        elif usr == 's':
-            rn.run_heatmap_g(sets,data,'getsets')
+        elif usr == 'ds':
+            rn.run_heatmap_g(sets,data,'getsets_d')
+        elif usr == 'cs':
+            rn.run_heatmap_g(sets,data,'getsets_c')
         elif usr == 'b':
             running = False
     return heat_maps
@@ -469,10 +472,14 @@ def func_switch(test,tag,args):
         func_out = wf.calc_centerpoints(test)
     elif tag == 'igloc':
         func_out = wf.display_igloc(test,args[0],args[1])
-    elif tag == 'getsets':
-        func_out = wf.get_mapsets(test,thresh=args[0],save=args[1])
-    elif tag == 'display_mapsets':
-        func_out = wf.display_mapsets(test,cmap_usr=args[0])
+    elif tag == 'getsets_d':
+        func_out = wf.get_mapsets_d(test,thresh=args[0],save=args[1])
+    elif tag == 'getsets_c':
+        func_out = wf.get_mapsets_c(test,thresh=args[0],save=args[1])
+    elif tag == 'display_mapsets_d':
+        func_out = wf.display_mapsets_d(test,cmap_usr=args[0])
+    elif tag == 'display_mapsets_c':
+        func_out = wf.display_mapsets_c(test,cmap_usr=args[0])
     else:
         return func_out
     return func_out

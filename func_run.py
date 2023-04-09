@@ -20,8 +20,8 @@ def run_heatmap_g(sets,data,map_type):
         thresh = 50
     else:
         print('Error')
-    if map_type == 'getsets':
-        func = run_wffpa.loop_handl(sets,data,'getsets',[thresh,save])
+    if map_type == 'getsets_d' or map_type == 'getsets_c':
+        func = run_wffpa.loop_handl(sets,data,map_type,[thresh,save])
     else:
         func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
     return func
@@ -40,7 +40,8 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
         print(' Discrete ignition --------------- di')
         print(' Discrete complete --------------- dc')
         print(' Ignition location --------------- l')
-        print(' Display sets -------------------- s')
+        print(' Display sets -d  ---------------- ds')
+        print(' Display sets -c ----------------- cs')
         print(' Go back ------------------------- b')
         print('\n')
         usr = input('Please input which type of map you would like to display: ')
@@ -57,8 +58,11 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
         elif usr == 'l':
             run_wffpa.loop_handl(sets,data,'igloc',[['preig','ig','dis_ig','dis_c'],cmap])
             map_type = None
-        elif usr == 's':
-            run_wffpa.loop_handl(sets,data,'display_mapsets',[cmap])
+        elif usr == 'ds':
+            run_wffpa.loop_handl(sets,data,'display_mapsets_d',[cmap])
+            map_type = None
+        elif usr == 'cs':
+            run_wffpa.loop_handl(sets,data,'display_mapsets_c',[cmap])
             map_type = None
         elif usr == 'b':
             return
