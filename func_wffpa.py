@@ -312,13 +312,13 @@ def display_mapsets_d(test,cmap_usr):
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     show_window(noticks=True,winmax=False,closewin=False)
-    plt.close('all')
+    # plt.close('all')
     return True
 
 def display_mapsets_c(test,cmap_usr):
-    usr = input('Continue or go back (b)')
-    if usr == 'b':
-        return 999
+    # usr = input('Continue or go back (b)')
+    # if usr == 'b':
+        # return 999
     cwd = os.getcwd()
     name = test.filename.replace('.tif','')
     item = 1
@@ -339,11 +339,12 @@ def display_mapsets_c(test,cmap_usr):
         # show_window(noticks=True,winmax=False)
         item+=1
     img = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
+    plt.figure()
     plt.imshow(img,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=True)
+    show_window(noticks=True,winmax=True,closewin=True)
     return True
 
 def displaymaps(heatmap,map_type,cmap_usr):
@@ -369,7 +370,7 @@ def displaymaps(heatmap,map_type,cmap_usr):
     ax.axes.yaxis.set_visible(False)
     # if map_type == 'ig':
     #     plt.colorbar()
-    show_window(noticks=True,winmax=True)
+    show_window(noticks=True,winmax=True,closewin=True)
     return True
 
 def get_points(img,test,points_type):
@@ -1395,7 +1396,7 @@ def show_window(noticks,winmax,closewin):
         if isfig == False or listener.running == False:
             run = False
     if closewin is True:
-        plt.close()
+        plt.close('all')
     return
 
 def on_release(key):

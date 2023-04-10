@@ -64,6 +64,9 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
         elif usr == 'cs':
             run_wffpa.loop_handl(sets,data,'display_mapsets_c',[cmap])
             map_type = None
+        elif usr == 's':
+            run_wffpa.loop_handl(sets,data,'display_mapsets',[cmap])
+            map_type = None
         elif usr == 'b':
             return
         if usr != 's' and usr != 'l':

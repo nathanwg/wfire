@@ -480,6 +480,10 @@ def func_switch(test,tag,args):
         func_out = wf.display_mapsets_d(test,cmap_usr=args[0])
     elif tag == 'display_mapsets_c':
         func_out = wf.display_mapsets_c(test,cmap_usr=args[0])
+    elif tag == 'display_mapsets':
+        func_out = wf.display_mapsets_d(test,cmap_usr=args[0])
+        if func_out == True:
+            wf.display_mapsets_c(test,cmap_usr=args[0])
     else:
         return func_out
     return func_out
