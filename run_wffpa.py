@@ -39,6 +39,13 @@ def run_heatmap(sets,data,cmap):
             rn.run_heatmap_g(sets,data,'getsets_d')
         elif usr == 'cs':
             rn.run_heatmap_g(sets,data,'getsets_c')
+        elif usr == 'all':
+            rn.run_heatmap_g(sets,data,'preig')
+            rn.run_heatmap_g(sets,data,'ig')
+            rn.run_heatmap_g(sets,data,'dis_ig')
+            rn.run_heatmap_g(sets,data,'dis_c')
+            rn.run_heatmap_g(sets,data,'getsets_d')
+            rn.run_heatmap_g(sets,data,'getsets_c')
         elif usr == 'b':
             running = False
     return heat_maps
@@ -404,6 +411,7 @@ def loop_handl(sets,data,tag,args):
     for i in range(0,nsets,2):
         start = int(sets[i])
         stop = int(sets[i+1])
+        print(start,stop)
         tests = np.linspace(start,stop,stop-start+1)
         ntests = len(tests)
 

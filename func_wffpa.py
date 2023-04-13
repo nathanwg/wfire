@@ -1584,7 +1584,7 @@ def plot_numpixelsarea(test,showmax):
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def change_errbar(showunc):
