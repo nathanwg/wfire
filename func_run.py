@@ -21,7 +21,9 @@ def run_heatmap_g(sets,data,map_type):
     else:
         print('Error')
     if map_type == 'getsets_d' or map_type == 'getsets_c':
-        func = run_wffpa.loop_handl(sets,data,map_type,[thresh,save])
+        func = run_wffpa.loop_handl(sets,data,map_type,[thresh,save,'alpha'])
+    elif map_type == 'getsets_cb':
+        func = run_wffpa.loop_handl(sets,data,'getsets_c',[thresh,save,'beta'])
     else:
         func = run_wffpa.loop_handl(sets,data,'getmap',[thresh,save,map_type])
     return func

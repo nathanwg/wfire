@@ -13,15 +13,16 @@ def run_heatmap(sets,data,cmap):
     while running is True:
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------','\n')
-        print(' Generate heatmap ------------------- g')
-        print(' Display heatmap -------------------- d')
-        print(' Generate pre-ignition heatmap ------ p')
-        print(' Generate ignition heatmap ---------- i')
-        print(' Generate discrete ignition heatmap - di')
-        print(' Generate discrete complete heatmap - dc')
-        print(' Generate map sets (discrete) ------- ds')
-        print(' Generate map sets (cumulative) ----- cs')
-        print(' Go back ---------------------------- b')
+        print(' Generate heatmap ------------------------ g')
+        print(' Display heatmap ------------------------- d')
+        print(' Generate pre-ignition heatmap ----------- p')
+        print(' Generate ignition heatmap --------------- i')
+        print(' Generate discrete ignition heatmap ------ di')
+        print(' Generate discrete complete heatmap ------ dc')
+        print(' Generate map sets (discrete) ------------ ds')
+        print(' Generate map sets (cumulative - alpha) -- csa')
+        print(' Generate map sets (cumulative - beta) --- csb)')
+        print(' Go back --------------------------------- b')
         usr = input('Selected option: ')
         if usr == 'g':
             heat_maps = rn.run_heatmap_g(sets,data,'all')
@@ -37,8 +38,10 @@ def run_heatmap(sets,data,cmap):
             rn.run_heatmap_g(sets,data,'dis_c')
         elif usr == 'ds':
             rn.run_heatmap_g(sets,data,'getsets_d')
-        elif usr == 'cs':
+        elif usr == 'csa':
             rn.run_heatmap_g(sets,data,'getsets_c')
+        elif usr == 'csb':
+            rn.run_heatmap_g(sets,data,'getsets_cb')
         elif usr == 'all':
             rn.run_heatmap_g(sets,data,'preig')
             rn.run_heatmap_g(sets,data,'ig')
@@ -483,7 +486,7 @@ def func_switch(test,tag,args):
     elif tag == 'getsets_d':
         func_out = wf.get_mapsets_d(test,thresh=args[0],save=args[1])
     elif tag == 'getsets_c':
-        func_out = wf.get_mapsets_c(test,thresh=args[0],save=args[1])
+        func_out = wf.get_mapsets_c(test,thresh=args[0],save=args[1],maptag=args[2])
     elif tag == 'display_mapsets_d':
         func_out = wf.display_mapsets_d(test,cmap_usr=args[0])
     elif tag == 'display_mapsets_c':

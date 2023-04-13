@@ -210,11 +210,14 @@ def get_mapsets_d(test,thresh,save):
         item+=1
     return None
 
-def get_mapsets_c(test,thresh,save):
+def get_mapsets_c(test,thresh,save,maptag):
     print(test.testnumber)
     name = test.filename.replace('.tif','')
     cwd = os.getcwd()
-    filepath_check = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets01.npy'
+    if maptag == 'alpha':
+        filepath_check = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets01.npy'
+    else:
+        filepath_check = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets01.npy'
     ischeck = checkfile(filepath_check,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -222,31 +225,54 @@ def get_mapsets_c(test,thresh,save):
     img = readfile(filepath,True)[0]
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
     ignition_frame = test.ignition_time[1]
+
+    # print(filepath)
+    # print(ignition_frame)
+    # input('checking....')
+
     fps = 500
     item = 1
-
     cut_start = int(ignition_frame)
-    stop_times_s = [0.5,1,2] # seconds after ignition
-    stop_times = np.multiply(stop_times_s,fps)+ignition_frame
-    # eow_frames_s = np.divide(stop_times_s,5)
-    # eow_frames = np.multiply(eow_frames_s,fps)+ignition_frame
-    eow_frame = cut_start+(0.05*fps)
-    scalar = stop_times_s[-1]*fps
-    for i in range(len(stop_times)):
-        heatmap = np.zeros((num_rows,num_cols))
-        cut_stop = int(stop_times[i])
-        frames_oi = frames[cut_start:cut_stop]
-        frame_num = cut_start
-        for j in frames_oi:
-            j = j.astype(float)
-            arr = (j-thresh)>0
-            heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar)
-            frame_num+=1
-        if save is True:
-            savepath = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets0' + str(item) + '.npy'
-            np.save(savepath,heatmap)
-        item+=1
-
+    if maptag == 'alpha':
+        stop_times_s = [0.5,1,2] # seconds after ignition
+        stop_times = np.multiply(stop_times_s,fps)+ignition_frame
+        eow_frame = cut_start+(0.05*fps)
+        scalar = stop_times_s[-1]*fps
+        for i in range(len(stop_times)):
+            heatmap = np.zeros((num_rows,num_cols))
+            cut_stop = int(stop_times[i])
+            frames_oi = frames[cut_start:cut_stop]
+            frame_num = cut_start
+            for j in frames_oi:
+                j = j.astype(float)
+                arr = (j-thresh)>0
+                heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar)
+                frame_num+=1
+            if save is True:
+                savepath = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets0' + str(item) + '.npy'
+                np.save(savepath,heatmap)
+            item+=1
+    elif maptag == 'beta':
+        stop_time = int((test.eof-ignition_frame)/2)+ignition_frame
+        stop_time = int(test.eof)
+        eow_frames_s = [0.05,0.1,0.2]
+        eow_frames = [cut_start+(eow_frames_s[0]*fps),cut_start+(eow_frames_s[1]*fps),cut_start+(eow_frames_s[2]*fps)]
+        relax = 0.5
+        scalar = (stop_time-ignition_frame)*(1-relax)
+        scalars = [scalar,scalar*eow_frames_s[0]/eow_frames_s[1],scalar*eow_frames_s[0]/eow_frames_s[2]]
+        frames_oi = frames[cut_start:stop_time]
+        for i in range(len(eow_frames)):
+            heatmap = np.zeros((num_rows,num_cols))
+            frame_num = cut_start
+            for j in frames_oi:
+                j = j.astype(float)
+                arr = (j-thresh)>0
+                heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame=eow_frames[i],scalar=scalars[i])
+                frame_num+=1
+            if save is True:
+                savepath = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets0' + str(item) + '.npy'
+                np.save(savepath,heatmap)
+            item+=1
     return
 
 def map_discrete(heatmap,arr,flame_step,spacer):
@@ -323,12 +349,13 @@ def display_mapsets_c(test,cmap_usr):
     name = test.filename.replace('.tif','')
     item = 1
     maps = []
-    loadpath = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets03' + '.npy'
+    loadpath = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets03' + '.npy'
     map = np.load(loadpath)
     titles = ('0-0.1 -- 0.02','0-0.5 -- 0.1','0-1.0 -- 0.2')
     for i in range(3):
-        loadpath = cwd+'_cache\\heatmaps\\csets\\' + name + '_csets0' + str(item) + '.npy'
+        loadpath = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets0' + str(item) + '.npy'
         map = np.load(loadpath)
+        # input(map)
         map = map/map.max()
         maps.append(map)
         # plt.imshow(map,cmap=cmap_usr)
@@ -336,7 +363,7 @@ def display_mapsets_c(test,cmap_usr):
         # ax = plt.gca()
         # ax.axes.xaxis.set_visible(False)
         # ax.axes.yaxis.set_visible(False)
-        # show_window(noticks=True,winmax=False)
+        # show_window(noticks=True,winmax=False,closewin=True)
         item+=1
     img = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
     plt.figure()
