@@ -482,6 +482,9 @@ def func_switch(test,tag,args):
     elif tag == 'centerpoints':
         func_out = wf.calc_centerpoints(test)
     elif tag == 'igloc':
+        func_out = wf.display_mapsets_c(test,cmap_usr=args[1])
+        if func_out == 999:
+            return func_out
         func_out = wf.display_igloc(test,args[0],args[1])
     elif tag == 'getsets_d':
         func_out = wf.get_mapsets_d(test,thresh=args[0],save=args[1])

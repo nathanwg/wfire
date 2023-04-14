@@ -57,14 +57,14 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
             map_type = 'dis_ig'
         elif usr == 'dc':
             map_type = 'dis_c'
-        elif usr == 'l':
+        elif usr == 'l':##
             run_wffpa.loop_handl(sets,data,'igloc',[['preig','ig','dis_ig','dis_c'],cmap])
             map_type = None
         elif usr == 'ds':
             run_wffpa.loop_handl(sets,data,'display_mapsets_d',[cmap])
             map_type = None
         elif usr == 'cs':
-            run_wffpa.loop_handl(sets,data,'display_mapsets_c',[cmap])
+            # run_wffpa.loop_handl(sets,data,'display_mapsets_c',[cmap])
             map_type = None
         elif usr == 's':
             run_wffpa.loop_handl(sets,data,'display_mapsets',[cmap])

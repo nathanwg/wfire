@@ -255,11 +255,11 @@ def get_mapsets_c(test,thresh,save,maptag):
     elif maptag == 'beta':
         stop_time = int((test.eof-ignition_frame)/2)+ignition_frame
         stop_time = int(test.eof)
-        eow_frames_s = [0.05,0.1,0.2]
-        eow_frames = [cut_start+(eow_frames_s[0]*fps),cut_start+(eow_frames_s[1]*fps),cut_start+(eow_frames_s[2]*fps)]
-        relax = 0.5
-        scalar = (stop_time-ignition_frame)*(1-relax)
-        scalars = [scalar,scalar*eow_frames_s[0]/eow_frames_s[1],scalar*eow_frames_s[0]/eow_frames_s[2]]
+        eow_frames_s = [0.01,0.05,0.1,0.2]
+        eow_frames = [cut_start+(eow_frames_s[0]*fps),cut_start+(eow_frames_s[1]*fps),cut_start+(eow_frames_s[2]*fps),cut_start+(eow_frames_s[3]*fps)]
+        relax = 0.9
+        scalar = (stop_time-ignition_frame)*(1+relax)
+        scalars = [scalar,scalar*0.2,scalar*0.1,scalar*0.05]
         frames_oi = frames[cut_start:stop_time]
         for i in range(len(eow_frames)):
             heatmap = np.zeros((num_rows,num_cols))
@@ -342,9 +342,9 @@ def display_mapsets_d(test,cmap_usr):
     return True
 
 def display_mapsets_c(test,cmap_usr):
-    # usr = input('Continue or go back (b)')
-    # if usr == 'b':
-        # return 999
+    usr = input('Continue or go back (b)')
+    if usr == 'b':
+        return 999
     cwd = os.getcwd()
     name = test.filename.replace('.tif','')
     item = 1
@@ -352,7 +352,7 @@ def display_mapsets_c(test,cmap_usr):
     loadpath = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets03' + '.npy'
     map = np.load(loadpath)
     titles = ('0-0.1 -- 0.02','0-0.5 -- 0.1','0-1.0 -- 0.2')
-    for i in range(3):
+    for i in range(4):
         loadpath = cwd+'_cache\\heatmaps\\cbsets\\' + name + '_cbsets0' + str(item) + '.npy'
         map = np.load(loadpath)
         # input(map)
@@ -365,24 +365,27 @@ def display_mapsets_c(test,cmap_usr):
         # ax.axes.yaxis.set_visible(False)
         # show_window(noticks=True,winmax=False,closewin=True)
         item+=1
-    img = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
+    imgs01 = np.concatenate((maps[0],maps[1]),axis=1)
+    imgs02 = np.concatenate((maps[2],maps[3]),axis=1)
+    img = np.concatenate((imgs01,imgs02),axis=0)
     plt.figure()
     plt.imshow(img,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=True,closewin=True)
+    show_window(noticks=True,winmax=True,closewin=False)
     return True
 
 def displaymaps(heatmap,map_type,cmap_usr):
     """...
     """
-    usr = input('Continue (\'b\' to go back)')
-    if usr == 'b':
-        return 999
-    if heatmap is None:
-        input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
-        return 999
+    if map_type != 'igloc':
+        usr = input('Continue (\'b\' to go back)')
+        if usr == 'b':
+            return 999
+        if heatmap is None:
+            input('Heatmap has not been loaded, most likely because there is no file saved for it (Hit \'Enter\')')
+            return 999
     num_rows = heatmap.shape[0]
     calib = np.zeros((num_rows,1))
     calib[0,0] = 4500
@@ -391,6 +394,7 @@ def displaymaps(heatmap,map_type,cmap_usr):
         imgs = np.concatenate((heatmap,calib),axis=1)
     else:
         imgs = heatmap
+    plt.figure()
     plt.imshow(imgs,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
