@@ -237,6 +237,7 @@ def run_tools(sets,data,cmap):
         print(' Heatmaps ------------ h','\n','Select points ------- s')
         print(' Flame area ---------- a')
         print(' Display data values - d')
+        print(' Save burnout frames - u')
         print(' Center of points ---- c (tool in beta stage)')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
@@ -258,6 +259,10 @@ def run_tools(sets,data,cmap):
             run_displaydata(sets,data)
         elif usr_func == 'c':
             loop_handl(sets,data,tag='centerpoints',args=None)
+        elif usr_func == 'u':
+            loop_handl(sets,data,'burnout',args=None)
+        elif usr_func == 'ud':
+            loop_handl(sets,data,'burnout_display',args=[cmap])
         elif usr_func == 'b':
             return
         else:
@@ -498,6 +503,10 @@ def func_switch(test,tag,args):
         func_out = wf.display_mapsets_d(test,cmap_usr=args[0])
         if func_out == True:
             wf.display_mapsets_c(test,cmap_usr=args[0])
+    elif tag == 'burnout':
+        func_out = wf.save_burnout(test)
+    elif tag == 'burnout_display':
+        func_out = wf.burnout_display(test,cmap_usr=args[0])
     else:
         return func_out
     return func_out
