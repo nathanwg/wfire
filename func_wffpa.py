@@ -257,7 +257,7 @@ def get_mapsets_c(test,thresh,save,maptag):
         stop_time = int(test.eof)
         eow_frames_s = [0.01,0.05,0.1,0.2]
         eow_frames = [cut_start+(eow_frames_s[0]*fps),cut_start+(eow_frames_s[1]*fps),cut_start+(eow_frames_s[2]*fps),cut_start+(eow_frames_s[3]*fps)]
-        relax = 0.9
+        relax = 1.5
         scalar = (stop_time-ignition_frame)*(1+relax)
         scalars = [scalar,scalar*0.2,scalar*0.1,scalar*0.05]
         frames_oi = frames[cut_start:stop_time]
@@ -337,7 +337,7 @@ def display_mapsets_d(test,cmap_usr):
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=False,closewin=False)
+    show_window(noticks=True,winmax=False,closewin=True)
     # plt.close('all')
     return True
 
