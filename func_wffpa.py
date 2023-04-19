@@ -1324,6 +1324,9 @@ def get_plotinfo(sets,data):
     return labels,temperatures,linestyle
 
 def checkfile(filepath,test,checktype,isinput):
+    # Checktype should be true if you are trying to save a file
+    # Checktype should be false if you are trying to load a file
+    # Function will return True if you are good to go, regardless if saving or loading a file
     if checktype:
         messg = '---------------------------------------------------------\
             \nLooks like there\'s already a file with this name.\
@@ -1771,3 +1774,32 @@ def calc_centerpoints(test):
     plt.plot(x,centerpoints[:,2],linewidth=0.5)
     show_window(noticks=False,winmax=False)
     return
+
+def save_burnout(test):
+    fpath = os.getcwd() + '_cache\\burnout\\' + test.filename.replace('.tif','_burnoutframes.npy')
+    ischeck = checkfile(fpath,test,checktype=True,isinput=True)
+    if ischeck is False:
+        return 999
+    test_filepath = os.getcwd().replace('wfire','') + test.filename
+    img,filename = readfile(test_filepath,True)
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+    burnout_img = frames[int(test.eof-1)]
+    thresh = get_threshold(test,test.fmc,tag='other')
+    img = burnout_img.astype(float)
+    arr = (img-thresh)>0
+    burnout_img_mod = np.multiply(burnout_img,arr)
+    burnout_imgs = np.concatenate((burnout_img,burnout_img_mod),axis=1)
+    np.save(fpath,burnout_imgs)
+    return True
+
+def burnout_display(test,cmap_usr):
+    usr = input('Continue (\'b\' to go back)')
+    if usr == 'b':
+        return 999
+    fpath = os.getcwd() + '_cache\\burnout\\' + test.filename.replace('.tif','_burnoutframes.npy')
+    ischeck = checkfile(fpath,test,checktype=False,isinput=True)
+    if ischeck is False:
+        return 999
+    burnout_img = np.load(fpath)
+    plt.imshow(burnout_img,cmap=cmap_usr)
+    show_window(noticks=True,winmax=True,closewin=True)
