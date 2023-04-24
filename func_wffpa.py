@@ -1409,7 +1409,7 @@ def displayarea(test,cmap_usr):
         plt.imshow(imgshow,cmap=cmap_usr)
         title = 'Test number: '+str(int(test.testnumber))
         plt.title(title)
-        show_window(noticks=True,winmax=True)
+        show_window(noticks=True,winmax=True,closewin=True)
     return
 
 def show_window(noticks,winmax,closewin):
@@ -1500,7 +1500,7 @@ def comp_frames(img,cmap_usr):
     imgshow = np.concatenate((img,img_new),axis=0)
     plt.imshow(imgshow,cmap=cmap_usr)
     plt.title('Left: frame of max area (based on numpixels with cropped rectangle removal). Right: frame of max area (based on numpixels)')
-    show_window(noticks=True,winmax=True)
+    show_window(noticks=True,winmax=True,closewin=True)
     return
 
 def comp_areavals(test,isprint):
