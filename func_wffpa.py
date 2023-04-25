@@ -80,7 +80,7 @@ def show_frames(frames,foi,eof):
         ax = plt.gca()
         ax.axes.xaxis.set_visible(False)
         ax.axes.yaxis.set_visible(False)
-        show_window(noticks=True,winmax=True)
+        show_window(noticks=True,winmax=True,closewin=True)
 
     ignition_frame = int(foi)
     img01 = frames[ignition_frame]
@@ -316,7 +316,7 @@ def display_mapsets_d(test,cmap_usr):
         # ax.axes.xaxis.set_visible(False)
         # ax.axes.yaxis.set_visible(False)
         # plt.colorbar()
-        # show_window(noticks=True,winmax=False)
+        # show_window(noticks=True,winmax=False,closewin=True)
         item+=1
     img01 = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
     img02 = np.concatenate((maps[3],maps[4],maps[5]),axis=1)
@@ -644,7 +644,7 @@ def display_linedisplay(h,coordinates):
         h[y,i] = 4500
     plt.close()
     plt.imshow(h,cmap='nipy_spectral_r')
-    show_window(noticks=True,winmax=False)
+    show_window(noticks=True,winmax=False,closewin=True)
 
 def change_linepar(distance):
     print('Distance is currently [vert distance, distance to left, distance to right] (cm) - ',distance,'\n')
@@ -717,7 +717,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
     plt.ylim(0,ylim)
     plt.xlim(0,9)
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
 
 def plotprofiles_v(sets,data,isnorm,xlim):
     labels = []
@@ -768,7 +768,7 @@ def plotprofiles_v(sets,data,isnorm,xlim):
     plt.xlim(0,xlim)
     plt.ylim(0,9)
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
         
 def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
@@ -925,7 +925,7 @@ def creategrids(test):
     for k in x_ticks:
         x_plot = np.linspace(k,k,100)
         plt.plot(x_plot,y_plot,'k')
-    show_window(noticks=True,winmax=False)
+    show_window(noticks=True,winmax=False,closewin=True)
             
     return
                 
@@ -969,7 +969,7 @@ def plotmedians(sets,data,medians_sets,showunc):
     plt.title('Average median of flame detection during burning')
     plt.legend()
     plt.ylim(0,1)
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def get_max_flame_area(test):
@@ -1052,7 +1052,7 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
             dis_show = np.concatenate((dis_frame01,dis_frame02),axis=1)
             plt.imshow(dis_show,cmap='nipy_spectral_r')
             plt.title('Checking frame')
-            show_window(noticks=True,winmax=True)
+            show_window(noticks=True,winmax=True,closewin=True)
         numpixels_frame01,numpixels_frame02 = x_bool01.sum(),x_bool02.sum()
         if numpixels_frame01 > numpixels_frame02:
             numpixels_frame = numpixels_frame01
@@ -1066,7 +1066,7 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
             dis_show = np.multiply(ref_frame,x_bool)
             plt.imshow(dis_show,cmap='nipy_spectral_r')
             plt.title('Checking frame')
-            show_window(noticks=True,winmax=True)
+            show_window(noticks=True,winmax=True,closewin=True)
         numpixels_frame = x_bool.sum()
         flame_area = pixel_area*numpixels_frame*(100**2)
         return flame_area
@@ -1125,7 +1125,7 @@ def get_ima(test):
     if check_frames:
         plt.imshow(dis_show,cmap='nipy_spectral_r')
         plt.title('Checking frame')
-        show_window(noticks=True,winmax=True)
+        show_window(noticks=True,winmax=True,closewin=True)
 
     y_mod = np.multiply(m_frame,x_bool)
     total = y_mod.sum()
@@ -1197,34 +1197,42 @@ def calc_saturate(test):
 def plot_max_flame_area(sets,data,max_flamearea_sets,showunc):  
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     area_averages = []
+    plt.figure(figsize=[9,7.5],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
     for i in range(len(max_flamearea_sets)):           
         area_averages.append(np.mean(max_flamearea_sets[i]))
         unc,cap = calc_uncertainty(max_flamearea_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],area_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap,label=labels[i])
-    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.xlabel('Average exhaust gas temperature $^{\circ}$C')
     plt.ylabel('Maximum flame area (cm$^2$)')
-    plt.title('Average maximum flame area')
+    # plt.title('Average maximum flame area')
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def plot_ima(sets,data,ima_sets,showunc):
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     ima_averages = []
+    plt.figure(figsize=[9,7.5],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
     for i in range(len(ima_sets)):        
         ima_averages.append(np.mean(ima_sets[i]))
         unc,cap = calc_uncertainty(ima_sets[i],10),4
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],ima_averages[i]/255,fmt=linestyle[i],yerr=unc/255,capsize=cap,label=labels[i])
-    plt.xlabel('Average exhaust gas temperature $^{\circ}C$')
+    plt.xlabel('Average exhaust gas temperature $^{\circ}$C')
     plt.ylabel('Average intensity of max flame area')
-    plt.title('Average normalized light intensity of maximum flame area')
+    # plt.title('Average normalized light intensity of maximum flame area')
     plt.ylim(0,1)
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def plot_igtime(sets,data,igtimes,showunc):
@@ -1232,7 +1240,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     """
     labels,temperatures,linestyle = get_plotinfo(sets,data) 
     igtimes_averages = []
-    plt.figure(figsize=[9,7],dpi=140)
+    plt.figure(figsize=[9,7.5],dpi=140)
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams.update({'font.size': 24})
     plt.tight_layout()
@@ -1246,7 +1254,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.ylabel('Average ignition time (s)')
     # plt.title('Average ignition times')
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def plot_dur(sets,data,dur,showunc):
@@ -1268,7 +1276,7 @@ def plot_dur(sets,data,dur,showunc):
     plt.ylabel('Average flaming duration (s)')
     # plt.title('Average flaming duration')
     plt.legend()
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
     os.system('cls')
@@ -1699,7 +1707,7 @@ def selectarea(test):
         #--------
 
         plt.imshow(imgshow,cmap='nipy_spectral_r')
-        show_window(noticks=True,winmax=True)
+        show_window(noticks=True,winmax=True,closewin=True)
         count+=1
         print(test.testnumber)
         print()
@@ -1772,7 +1780,7 @@ def calc_centerpoints(test):
     plt.plot(x,centerpoints[:,0],linewidth=0.5)
     plt.plot(x,centerpoints[:,1],linewidth=0.5)
     plt.plot(x,centerpoints[:,2],linewidth=0.5)
-    show_window(noticks=False,winmax=False)
+    show_window(noticks=False,winmax=False,closewin=True)
     return
 
 def save_burnout(test):
