@@ -10,6 +10,7 @@ import os
 from classes import Test
 from func_wfipa import readfile, get_image_properties
 import matplotlib.pyplot as plt
+import matplotlib
 import cv2 as cv
 import keyboard
 import matplotlib.animation as animation
@@ -178,7 +179,8 @@ def get_mapsets_d(test,thresh,save):
     print(test.testnumber)
     name = test.filename.replace('.tif','')
     cwd = os.getcwd()
-    filepath_check = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets01.npy'
+    # filepath_check = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets01.npy'
+    filepath_check = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets01.npy'
     ischeck = checkfile(filepath_check,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -189,7 +191,8 @@ def get_mapsets_d(test,thresh,save):
     fps = 500
     item = 1
 #---------------------
-    time_step = 0.1*fps
+    # time_step = 0.1*fps
+    time_step = 0.42*fps
     flame_step = 0
     for i in range(7):
         heatmap = np.zeros((num_rows,num_cols))
@@ -205,7 +208,8 @@ def get_mapsets_d(test,thresh,save):
             arr = (j-thresh)>0
             heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5)
         if save is True:
-            savepath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets0' + str(item) + '.npy'
+            # savepath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets0' + str(item) + '.npy'
+            savepath = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets0' + str(item) + '.npy'
             np.save(savepath,heatmap)
         item+=1
     return None
@@ -296,49 +300,54 @@ def display_mapsets_d(test,cmap_usr):
         return 999
     cwd = os.getcwd()
     name = test.filename.replace('.tif','')
-    item = 1
-    maps = []
-    loadpath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets06' + '.npy'
-    map = np.load(loadpath)
-    max_val = map.max()
-    xscalar = 0.6/max_val
-    num_rows = map.shape[0]
-    calib = np.zeros((num_rows,1))
-    calib[0,0] = max_val
-    for i in range(7):
-        loadpath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets0' + str(item) + '.npy'
-        map = np.load(loadpath)
-        map = np.concatenate((map,calib),axis=1)
-        map*=xscalar
-        maps.append(map)
-        # plt.imshow(map,cmap=cmap_usr)
-        # ax = plt.gca()
-        # ax.axes.xaxis.set_visible(False)
-        # ax.axes.yaxis.set_visible(False)
-        # plt.colorbar()
-        # show_window(noticks=True,winmax=False,closewin=True)
-        item+=1
-    img01 = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
-    img02 = np.concatenate((maps[3],maps[4],maps[5]),axis=1)
+    loadpaths = [cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets06' + '.npy',cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets06' + '.npy']
+    maps_load = [np.load(loadpaths[0]),np.load(loadpaths[1])]
+    max_vals = [maps_load[0].max(),maps_load[1].max()]
+    xscalars = [0.6/max_vals[0],2.52/max_vals[1]]
+    num_rows = maps_load[0].shape[0]
+    calibs = [np.zeros((num_rows,1)),np.zeros((num_rows,1))]
+    calibs[0][0,0] = max_vals[0]
+    calibs[1][0,0] = max_vals[1]
 
-    img = np.concatenate((img01,img02),axis=0)
+    folder_paths = ['_cache\\heatmaps\\dsets\\','_cache\\heatmaps\\dsets2\\']
+    plots = []
+    coors = [(200,50),(900,50),(200,600),(900,600)]
+    for j in range(2):
+        item = 1
+        maps = []
+        for i in range(7):
+            loadpath = cwd+folder_paths[j] + name + '_dsets0' + str(item) + '.npy'
+            map = np.load(loadpath)
+            map = np.concatenate((map,calibs[j]),axis=1)
+            map*=xscalars[j]
+            maps.append(map)
+            item+=1
+        img01 = np.concatenate((maps[0],maps[1],maps[2]),axis=1)
+        img02 = np.concatenate((maps[3],maps[4],maps[5]),axis=1)
 
-    plt.rcParams["figure.autolayout"] = True
-    plt.imshow(img,cmap=cmap_usr)
-    plt.colorbar()
-    ax = plt.gca()
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=True,closewin=False)
+        img = np.concatenate((img01,img02),axis=0)
+        plots.append(plt.figure())
+        move_figure(plots[j*2],coor=coors[j*2])
+        plt.rcParams["figure.autolayout"] = True
+        plt.imshow(img,cmap=cmap_usr)
+        plt.colorbar()
+        ax = plt.gca()
+        ax.axes.xaxis.set_visible(False)
+        ax.axes.yaxis.set_visible(False)
+        show_window(noticks=True,winmax=False,closewin=False,showwin=False)
 
-    plt.figure()
-    plt.imshow(maps[-1],cmap=cmap_usr)
-    plt.colorbar()
-    ax = plt.gca()
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=False,closewin=True)
-    # plt.close('all')
+        plots.append(plt.figure())
+        move_figure(plots[j*2+1],coor=coors[j*2+1])
+        plt.imshow(maps[-1],cmap=cmap_usr)
+        plt.colorbar()
+        ax = plt.gca()
+        ax.axes.xaxis.set_visible(False)
+        ax.axes.yaxis.set_visible(False)
+        if j == 0:
+            show_window(noticks=True,winmax=False,closewin=False,showwin=False)
+        elif j == 1:
+            show_window(noticks=True,winmax=False,closewin=False,showwin=True)
+    plt.close('all')
     return True
 
 def display_mapsets_c(test,cmap_usr):
@@ -390,8 +399,8 @@ def displaymaps(heatmap,map_type,cmap_usr):
     calib = np.zeros((num_rows,1))
     calib[0,0] = 4500
     if map_type == 'all':
-        # imgs = heatmap
-        imgs = np.concatenate((heatmap,calib),axis=1)
+        imgs = heatmap
+        # imgs = np.concatenate((heatmap,calib),axis=1)
     else:
         imgs = heatmap
     plt.figure()
@@ -401,7 +410,7 @@ def displaymaps(heatmap,map_type,cmap_usr):
     ax.axes.yaxis.set_visible(False)
     # if map_type == 'ig':
     #     plt.colorbar()
-    show_window(noticks=True,winmax=True,closewin=True)
+    show_window(noticks=True,winmax=True,closewin=True,showwin=True)
     return True
 
 def get_points(img,test,points_type):
@@ -535,6 +544,19 @@ def choose_preset(sets):
         for j in range(len(var)):
             sets_new.append(var[j])
     return sets_new
+
+def move_figure(f,coor):
+    """Move figure's upper left corner to pixel (x, y)"""
+    x,y = coor[0],coor[1]
+    backend = matplotlib.get_backend()
+    if backend == 'TkAgg':
+        f.canvas.manager.window.wm_geometry("+%d+%d" % (x, y))
+    elif backend == 'WXAgg':
+        f.canvas.manager.window.SetPosition((x, y))
+    else:
+        # This works for QT and GTK
+        # You can also use window.setGeometry
+        f.canvas.manager.window.move(x, y)
 
 def load_heatmap(test,map_type):
     """...
@@ -1250,6 +1272,8 @@ def plot_igtime(sets,data,igtimes,showunc):
         if showunc == False:
             unc,cap = 0,0
         plt.errorbar(temperatures[i],igtimes_averages[i]/500,fmt=linestyle[i],yerr=unc/500,capsize=cap,label=labels[i])
+        print('\n',sets[2*i],sets[2*i+1])
+        print('Temperature: ',temperatures[i],'igtime: ',igtimes_averages[i]/500)
     plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
     plt.ylabel('Average ignition time (s)')
     # plt.title('Average ignition times')
@@ -1420,23 +1444,24 @@ def displayarea(test,cmap_usr):
         show_window(noticks=True,winmax=True,closewin=True)
     return
 
-def show_window(noticks,winmax,closewin):
+def show_window(noticks,winmax,closewin,showwin):
     if noticks:
         plt.tick_params(axis='both',bottom=False,labelbottom=False,left=False,labelleft=False)
     if winmax:
         plt.get_current_fig_manager().window.showMaximized()
-    plt.show(block=False)
-    run = True
-    plt.pause(0.5)
-    listener = keyboard.Listener(
-    on_press=on_press,
-    on_release=on_release)
-    listener.start()
-    while run:
-        plt.waitforbuttonpress(timeout=0.1)
-        isfig = bool(plt.get_fignums())
-        if isfig == False or listener.running == False:
-            run = False
+    if showwin:
+        plt.show(block=False)
+        run = True
+        plt.pause(0.5)
+        listener = keyboard.Listener(
+        on_press=on_press,
+        on_release=on_release)
+        listener.start()
+        while run:
+            plt.waitforbuttonpress(timeout=0.1)
+            isfig = bool(plt.get_fignums())
+            if isfig == False or listener.running == False:
+                run = False
     if closewin is True:
         plt.close('all')
     return
@@ -1593,6 +1618,9 @@ def change_cmap(cmap):
     return cmaps[usr-1]
 
 def plot_numpixelsarea(test,showmax):
+    usr = input('Continue? (b)')
+    if usr == 'b':
+        return 999
     numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
     areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
     msg = 'You need to run \'Check frame number\' to generate this file'
@@ -1626,7 +1654,7 @@ def plot_numpixelsarea(test,showmax):
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
-    show_window(noticks=False,winmax=False,closewin=True)
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
 
 def change_errbar(showunc):
