@@ -382,7 +382,7 @@ def display_mapsets_c(test,cmap_usr):
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    show_window(noticks=True,winmax=True,closewin=False)
+    show_window(noticks=True,winmax=True,closewin=False,showwin=True)
     return True
 
 def displaymaps(heatmap,map_type,cmap_usr):
@@ -1441,7 +1441,7 @@ def displayarea(test,cmap_usr):
         plt.imshow(imgshow,cmap=cmap_usr)
         title = 'Test number: '+str(int(test.testnumber))
         plt.title(title)
-        show_window(noticks=True,winmax=True,closewin=True)
+        show_window(noticks=True,winmax=True,closewin=True,showwin=True)
     return
 
 def show_window(noticks,winmax,closewin,showwin):
@@ -1533,7 +1533,7 @@ def comp_frames(img,cmap_usr):
     imgshow = np.concatenate((img,img_new),axis=0)
     plt.imshow(imgshow,cmap=cmap_usr)
     plt.title('Left: frame of max area (based on numpixels with cropped rectangle removal). Right: frame of max area (based on numpixels)')
-    show_window(noticks=True,winmax=True,closewin=True)
+    show_window(noticks=True,winmax=True,closewin=True,showwin=True)
     return
 
 def comp_areavals(test,isprint):
@@ -1838,4 +1838,4 @@ def burnout_display(test,cmap_usr):
         return 999
     burnout_img = np.load(fpath)
     plt.imshow(burnout_img,cmap=cmap_usr)
-    show_window(noticks=True,winmax=True,closewin=True)
+    show_window(noticks=True,winmax=True,closewin=True,showwin=True)
