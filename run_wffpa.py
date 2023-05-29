@@ -355,6 +355,7 @@ def run_validatearea(sets,data,cmap):
             print()
         usr = input('Selected option: ')
         if usr == 'm':
+            os.system('cls')
             loop_handl(sets,data,'displayarea',args=[cmap])
         elif usr == 'n':
             ans = input('Would you like to display frames? (y/n)')

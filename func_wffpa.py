@@ -1278,7 +1278,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.ylabel('Average ignition time (s)')
     # plt.title('Average ignition times')
     plt.legend()
-    show_window(noticks=False,winmax=False,closewin=True)
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
 
 def plot_dur(sets,data,dur,showunc):
@@ -1433,7 +1433,7 @@ def displayarea(test,cmap_usr):
         img_new = np.concatenate((areaframe_ell,img_add),axis=0)
         imgshow = np.concatenate((imgshow,img_new),axis=1)
     if show:
-        os.system('cls')
+        # os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------')
         usr = input('Press \'Enter\' to continue, enter \'q\' to stop: ')
         if usr == 'q':
