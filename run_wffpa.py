@@ -486,7 +486,7 @@ def func_switch(test,tag,args):
     elif tag == 'comp_areavals':
         func_out = wf.comp_areavals(test,isprint=args[0])
     elif tag == 'centerpoints':
-        func_out = wf.calc_centerpoints(test)
+        func_out = wf.run_centerpoints(test)
     elif tag == 'igloc':
         func_out = wf.display_mapsets_c(test,cmap_usr=args[1])
         if func_out == 999:

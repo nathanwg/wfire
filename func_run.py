@@ -100,7 +100,7 @@ def run_linedisplay_c(test,distance):
     if usr == 'b':
         return 999
     coordinates = wf.get_line_coordinates(test,distance)
-    heatmap = wf.load_heatmap(test)
+    heatmap = wf.load_heatmap(test,'all')
     iscoordinates = isinstance(coordinates,np.ndarray)
     isheatmap = isinstance(heatmap,np.ndarray)
     if isheatmap == 0 or iscoordinates == 0:

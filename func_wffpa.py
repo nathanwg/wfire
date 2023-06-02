@@ -18,6 +18,7 @@ import func_wfipa
 import matplotlib.patches as pat
 from pynput import keyboard
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import math
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -666,7 +667,7 @@ def display_linedisplay(h,coordinates):
         h[y,i] = 4500
     plt.close()
     plt.imshow(h,cmap='nipy_spectral_r')
-    show_window(noticks=True,winmax=False,closewin=True)
+    show_window(noticks=True,winmax=False,closewin=True,showwin=True)
 
 def change_linepar(distance):
     print('Distance is currently [vert distance, distance to left, distance to right] (cm) - ',distance,'\n')
@@ -907,7 +908,7 @@ def calc_avgint(test,args):
 
 def creategrids(test):
     sector_width = 30
-    heatmap = load_heatmap(test)
+    heatmap = load_heatmap(test,'all')
     cwd = os.getcwd()
     pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
     ischeck = checkfile(pfilepath,test,checktype=False,isinput=True)
@@ -947,7 +948,7 @@ def creategrids(test):
     for k in x_ticks:
         x_plot = np.linspace(k,k,100)
         plt.plot(x_plot,y_plot,'k')
-    show_window(noticks=True,winmax=False,closewin=True)
+    show_window(noticks=True,winmax=False,closewin=True,showwin=True)
             
     return
                 
@@ -1509,8 +1510,11 @@ def checkframenum(test,cmap_usr,isdisplay):
     os.system('cls')
     print(test.testnumber)
     print('Max area calculated without a rectangle being removed\n to represent the sample area is at frame number:')
+    flame_duration = test.eof - test.ignition_time[1]
     for i in ind:
         print(i)
+        print('\nSeconds to max flame area (after ignition): ',round((i-test.ignition_time[1])/(500),2))
+        print('\nMaximum flame area occurred ',round((i-test.ignition_time[1])/(flame_duration),2),' of the way through the flaming period\n')
     print('Max area calculated with a rectangle being removed\n to represent the sample area is at frame number:')
     print(int(frame_num_cropped))
     if skip == False:
@@ -1789,27 +1793,83 @@ def edit_frame(img_new,ell,inf):
                 img_new[y+j][x+i]=0
     return img_new
 
-def calc_centerpoints(test):
+def run_centerpoints(test):
     fname = os.getcwd().replace('wfire','') + test.filename
     threshold = get_threshold(test,test.fmc,tag='other')
     numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
-    centerpoints = np.zeros((num_frames,3))
-    for i in range(num_frames):
-        if numpixels[i] != 0:
-            ref_frame = frames[i].astype(float)
-            bool_frame = ((ref_frame-threshold)>0)
-            inds = np.where(bool_frame==True)
-            xavg = np.average(inds[0])
-            yavg = np.average(inds[1])
-            mag = np.sqrt(xavg**2+yavg**2)
-            centerpoints[i] = [xavg,yavg,mag]
-    x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
-    x/=500
-    plt.plot(x,centerpoints[:,0],linewidth=0.5)
-    plt.plot(x,centerpoints[:,1],linewidth=0.5)
-    plt.plot(x,centerpoints[:,2],linewidth=0.5)
-    show_window(noticks=False,winmax=False,closewin=True)
+    ignition_time = test.ignition_time[1]
+    eof = test.eof
+    num_rows,num_cols = 8,8
+    centerpoints = np.zeros((num_rows,num_cols,int(eof-ignition_time)))
+    # centerpoints = np.zeros((num_rows,num_cols,int(num_frames-eof)-1))
+    # change = np.zeros((num_rows,num_cols,int(num_frames-eof)-1))
+    change = np.zeros((num_rows,num_cols,int(eof-ignition_time)))
+    start = int(ignition_time)
+    stop = int(ignition_time + centerpoints.shape[2])
+    # start = int(eof)
+    # stop = int(eof+centerpoints.shape[2])
+    frame_ind,nancount = 0,0
+
+    for i in range(start,stop):
+        ref_frame = frames[i].astype(float)
+        sec_num = 0
+        for j in range(num_rows):
+            for k in range(num_cols):
+                sec_num+=1
+                row_slice = [int(j*256/num_rows),int((j+1)*(256/num_rows))]
+                col_slice = [int(k*256/num_cols),int((k+1)*(256/num_cols))]
+                section = ref_frame[row_slice[0]:row_slice[1],col_slice[0]:col_slice[1]]
+                if i == start:
+                    prev_val = np.sqrt(16**2+16**2)
+                else:
+                    prev_val = centerpoints[j,k,frame_ind-1]
+                centerpoint = calc_centerpoint(section,threshold,prev_val,sec_num)
+                if centerpoint == 0:
+                    for ii in section:
+                        print(ii)
+                    print('section number: ',sec_num)
+                    plt.imshow(section)
+                    show_window(noticks=True,winmax=False,closewin=True,showwin=True)
+                if math.isnan(centerpoint):
+                    nancount+=1
+                change[j,k,frame_ind] = abs((centerpoint-prev_val)/prev_val)
+                centerpoints[j,k,frame_ind] = centerpoint
+        frame_ind+=1
+    print('The nancount is: ',nancount)
+    sec_num = 0
+    for i in range(num_rows):
+        for j in range(num_cols):
+            points_section = centerpoints[i,j,:]
+            change_section = change[i,j,:]
+            sec_num+=1
+            print('Section: ',sec_num, change_section.max())
+            if change_section.max() == 0:
+                continue
+            usr = input('Press enter to move on')
+            if usr == 'b':
+                return 999
+            x = np.linspace(0,len(points_section),len(points_section))
+            plt.figure()
+            plt.plot(x,points_section,linewidth=0.5)
+            plt.ylim(0,45)
+            show_window(noticks=False,winmax=False,closewin=False,showwin=False)
+            plt.figure()
+            plt.plot(x,change[i,j,:],linewidth=0.5)
+            plt.ylim(0,1)
+            show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
+
+def calc_centerpoint(section,threshold,prev_val,sec_num):
+    if section.max() < threshold:
+        return prev_val
+    bool_frame = ((section-threshold)>=0)
+    inds = np.where(bool_frame==True)
+    xavg = np.average(inds[0])
+    yavg = np.average(inds[1])
+    mag = np.sqrt(xavg**2+yavg**2)
+    if mag == 0:
+        mag = 1
+    return mag
 
 def save_burnout(test):
     fpath = os.getcwd() + '_cache\\burnout\\' + test.filename.replace('.tif','_burnoutframes.npy')
