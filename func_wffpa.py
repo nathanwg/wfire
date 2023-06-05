@@ -1094,11 +1094,12 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
         return flame_area
 
 def get_threshold(test,fmc,tag):
-    if tag == 'area':
+    fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
+    if tag == 'area'and os.path.exists(fpath):
         fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
         thresholds = np.load(fpath)
         threshold = thresholds[int(test.testnumber-1)]
-    elif tag == 'other':
+    else:
         if fmc == 0:
             threshold = 50
         else:
@@ -1278,7 +1279,7 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.ylabel('Average ignition time (s)')
     # plt.title('Average ignition times')
     plt.legend()
-    show_window(noticks=False,winmax=False,closewin=True)
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
 
 def plot_dur(sets,data,dur,showunc):
