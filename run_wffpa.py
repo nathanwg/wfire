@@ -239,6 +239,7 @@ def run_tools(sets,data,cmap):
         print(' Display data values - d')
         print(' Save burnout frames - u')
         print(' Center of points ---- c (tool in beta stage)')
+        print(' Flame height -------- f')
         print(' Go back ------------- b')
         print(' The following test numbers are being considered:')
         for i in range(0,len(sets),2):
@@ -263,6 +264,8 @@ def run_tools(sets,data,cmap):
             loop_handl(sets,data,'burnout',args=None)
         elif usr_func == 'ud':
             loop_handl(sets,data,'burnout_display',args=[cmap])
+        elif usr_func == 'f':
+            loop_handl(sets,data,'flameheight',args=[cmap,'all'])
         elif usr_func == 'b':
             return
         else:
@@ -508,6 +511,8 @@ def func_switch(test,tag,args):
         func_out = wf.save_burnout(test)
     elif tag == 'burnout_display':
         func_out = wf.burnout_display(test,cmap_usr=args[0])
+    elif tag == 'flameheight':
+        func_out = wf.find_flame_height(test,args)
     else:
         return func_out
     return func_out
