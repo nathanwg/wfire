@@ -1305,21 +1305,6 @@ def plot_dur(sets,data,dur,showunc):
     show_window(noticks=False,winmax=False,closewin=True)
     return
 
-    os.system('cls')
-    print('\n\n\n\n\n','--------------------------------------------------','\n')
-    igtimes_averages = []
-    temperatures = get_plotinfo(sets,data)[1]
-    for i in range(len(igtimes)):
-        igtimes_averages.append(np.mean(igtimes[i]))
-        unc = calc_uncertainty(igtimes[i],10)
-        start,stop=int(sets[i]),int(sets[i+1])
-        print('Temperature: ',temperatures[i])
-        # print('Test numbers: ',start,'-',stop)
-        print('Average ignition time: ',round(igtimes_averages[i]/500,2))
-        print('Uncertainty: ',round(unc/500,2),'\n\n')
-    input('Press enter to continue')
-    return
-
 
 def get_plotinfo(sets,data):
     """ This function gets plot info and returns
