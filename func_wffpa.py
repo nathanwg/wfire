@@ -1095,11 +1095,12 @@ def calc_area(ref_frame,filename,threshold,pixel_length,tag):
         return flame_area
 
 def get_threshold(test,fmc,tag):
-    if tag == 'area':
+    fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
+    if tag == 'area'and os.path.exists(fpath):
         fpath = os.getcwd()+'_cache\\adjusted_thresholds.npy'
         thresholds = np.load(fpath)
         threshold = thresholds[int(test.testnumber-1)]
-    elif tag == 'other':
+    else:
         if fmc == 0:
             threshold = 50
         else:
