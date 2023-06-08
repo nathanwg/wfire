@@ -433,6 +433,9 @@ def get_points(img,test,points_type):
     elif points_type == 'selectarea':
         pfilepath = cwd + '_cache\\flame_area\\selectarea\\'+test.filename.replace('.tif','_selectpoints.npy')
         num_points = None
+    elif points_type == 'flameheight':
+        pfilepath = cwd + '_cache\\flame_height\\'+test.filename.replace('.tif','_flameheightpoints.npy')
+        num_points = 2
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
@@ -440,11 +443,11 @@ def get_points(img,test,points_type):
     calib = np.zeros((num_rows,1))
     calib[0,0] = 4500
     if points_type != 'selectarea':
-        img = np.concatenate((img,calib),axis=1)
-    if points_type == 'selectarea':
+        img_new = np.concatenate((img,calib),axis=1)
+    if points_type == 'selectarea' or points_type == 'flameheight':
         plt.imshow(img,cmap='nipy_spectral_r')
     else:
-        plt.imshow(img)
+        plt.imshow(img_new)
     plt.get_current_fig_manager().window.showMaximized()
     if points_type == 'grid' or points_type == 'selectarea':
         p = plt.ginput(n=-1,timeout=-1,show_clicks=True)
@@ -452,7 +455,6 @@ def get_points(img,test,points_type):
         p = refine_gridpoints(p,rows,cols)
     else:
         p = plt.ginput(num_points)
-##    print(p[0][0],p[0][1])
     plt.close()
 
     return p,num_points
@@ -1891,35 +1893,51 @@ def find_flame_height(test,args):
     threshold = get_threshold(test,test.fmc,tag='other')
     numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
     num_rows,num_cols = frames[0].shape[0],frames[1].shape[1]
-    end_row = 100
-    datum = 175
     flaming_frames = 0
-    flame_heights = []
+    row_heights = []
 
     heatmap = load_heatmap(test,args[1])
-    displaymaps(heatmap,args[1],args[0])
+
+    input('Select two points. First point, bottom datum. Second point, upper check')
+    points = get_points(heatmap,test,points_type='flameheight')[0]
+    yvals = [points[0][1],points[1][1]]
+    datum = round(yvals[0])
+    end_row = int(round(yvals[1]))
 
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
         for j in range(end_row):
             if ref_frame[j].max() >= threshold:
                 top_row = j
-                flame_height = (datum-top_row)
                 flaming_frames+=1
-                flame_heights.append(flame_height)
-    print('Flame heights: ',flame_heights,'\nNumber of frames with flame detected: ',flaming_frames)
-    input('Press enter')
+                row_heights.append(top_row)
+                break
+    print('\nNumber of frames with flame detected: ',flaming_frames)
+    # input('Press enter')
     ######
-    # max_val = flame_heights.max()
-    # running = True
-    # while running:
-    #     count = 0
-    #     for i in flame_heights:
-    #         if i >= max_val:
-    #             count+=1
-    #         percentage = count/flaming_frames
-    #         if percentage >= 0.5:
-    #             avg_flame_height = max_val
-    #             running = False
-    #         else:
-    #             max_val-=0.1
+    current_row = min(row_heights)
+    running = True
+    percentage = None
+    while running:
+        old_percentage = percentage
+        count = 0
+        for i in row_heights:
+            if i <= current_row:
+                count+=1
+        percentage = round(count/flaming_frames,1)
+        print(percentage)
+        if percentage >= 0.5:
+            avg_flame_height = current_row
+            running = False
+            print('Current_row: ',current_row,'\nEnd_row: ',end_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
+            input()
+        else:
+            current_row+=1
+            if current_row >= end_row:
+                print('Current_row: ',current_row,'\nEnd_row: ',end_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
+                input()
+                return
+                
+    row = datum-avg_flame_height
+    heatmap[row] = heatmap.max()
+    displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r')
