@@ -44,6 +44,7 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
         print(' Ignition location --------------- l')
         print(' Display sets -d  ---------------- ds')
         print(' Display sets -c ----------------- cs')
+        print(' Display flaming ----------------- f')
         print(' Go back ------------------------- b')
         print('\n')
         usr = input('Please input which type of map you would like to display: ')
@@ -69,6 +70,8 @@ def run_heatmap_d(sets,heat_maps,data,cmap):
         elif usr == 's':
             run_wffpa.loop_handl(sets,data,'display_mapsets',[cmap])
             map_type = None
+        elif usr == 'f':
+            map_type = 'flaming'
         elif usr == 'b':
             return
         if usr != 's' and usr != 'l':

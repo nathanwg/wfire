@@ -136,6 +136,8 @@ def get_heatmaps(test,save,thresh,map_type):
         savepath = cwd+'_cache\\heatmaps\\dis_ig\\' + test.filename.replace('.tif','_disig_heatmap.npy')
     elif map_type == 'dis_c':
         savepath = cwd+'_cache\\heatmaps\\dis_c\\' + test.filename.replace('.tif','_disc_heatmap.npy')
+    elif map_type == 'flaming':
+        savepath = cwd+'_cache\\heatmaps\\flaming\\'+test.filename.replace('.tif','_flaming_heatmap.npy')
     ischeck = checkfile(savepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -159,8 +161,15 @@ def get_heatmaps(test,save,thresh,map_type):
             heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5) # the spacer helps set the discrete layers apart more or less (how much the color varies for each time step)
         elif map_type == 'dis_c' and frame_num >= ignition_frame:
             heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5)
+        elif map_type == 'flaming':
+            if frame_num >= ignition_frame:
+                heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar=1)
+            else:
+                frame_num += 1
+                continue
         else:
             heatmap = map_cumulative(heatmap,arr,frame_num,eow_frame,scalar=1)
+
         if map_type == 'preig' and frame_num >= ignition_frame:
             break
         elif map_type == 'all' and frame_num > test.eof:
@@ -170,6 +179,8 @@ def get_heatmaps(test,save,thresh,map_type):
         elif map_type == 'dis_ig' and frame_num >= eoi_frame:
             break
         elif map_type == 'dis_c' and frame_num >= test.eof:
+            break
+        elif map_type == 'flaming' and frame_num >= test.eof:
             break
         frame_num += 1
     if save is True:
@@ -435,7 +446,7 @@ def get_points(img,test,points_type):
         num_points = None
     elif points_type == 'flameheight':
         pfilepath = cwd + '_cache\\flame_height\\'+test.filename.replace('.tif','_flameheightpoints.npy')
-        num_points = 2
+        num_points = None
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
@@ -455,6 +466,8 @@ def get_points(img,test,points_type):
         p = refine_gridpoints(p,rows,cols)
     else:
         p = plt.ginput(num_points)
+        num_points = len(p)
+        print(num_points)
     plt.close()
 
     return p,num_points
@@ -576,6 +589,8 @@ def load_heatmap(test,map_type):
         path = cwd+'_cache\\heatmaps\\dis_ig\\'+pathname+'_disig_heatmap.npy'
     elif map_type == 'dis_c':
         path = cwd+'_cache\\heatmaps\\dis_c\\'+pathname+'_disc_heatmap.npy'
+    elif map_type == 'flaming':
+        path = cwd+'_cache\\heatmaps\\flaming\\'+pathname+'_flaming_heatmap.npy'
     else:
         return None
     msg = 'You can create this file by generating a heatmap'
@@ -610,16 +625,17 @@ def save_points(test,p,num_points,points_type):
         pfilepath = cwd+'\\points_vert\\'+test.filename.replace('.tif','')+'_points_vert.txt'
     elif points_type == 'grid':
         pfilepath = cwd+'\\points_grid\\'+test.filename.replace('.tif','')+'_points_grid.txt'
-    else:
-        input('Error (press \'Enter\' to return')
-        return
+    elif points_type == 'flame_height':
+        pfilepath = cwd+'_cache\\points\\flame_height\\'+test.filename.replace('.tif','')+'_points_height.txt'
+        # input('Error (press \'Enter\' to return)')
+        # return
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     pfile = open(pfilepath,'x')
     if points_type == 'profile':
         pfile.write(str(p[0][0])+' '+str(p[0][1])+' '+str(p[1][0])+' '+str(p[1][1]))
-    elif points_type == 'timeline' or points_type == 'vert' or points_type == 'grid':
+    elif points_type == 'timeline' or points_type == 'vert' or points_type == 'grid' or points_type == 'flame_height':
         for i in range(num_points):
             for j in range(2):
                 pfile.write(str(p[i][j])+' ')
@@ -1369,7 +1385,6 @@ def checkfile(filepath,test,checktype,isinput):
         return False
     else:
         return True
-    return
 
 def displayarea(test,cmap_usr):
     show = True
@@ -1888,6 +1903,36 @@ def burnout_display(test,cmap_usr):
     plt.imshow(burnout_img,cmap=cmap_usr)
     show_window(noticks=True,winmax=True,closewin=True,showwin=True)
 
+def load_flameheight_points(test,heatmap):
+    cwd = os.getcwd()
+    pfilepath = cwd+'_cache\\points\\flame_height\\'+test.filename.replace('.tif','')+'_points_height.txt'
+    ischeck = checkfile(pfilepath,test,False,False)
+    if ischeck == False:
+        input('First point selected will be the datum. Then select any number of points to profile off flaming vs smoldering area')
+        points,num_points = get_points(heatmap,test,points_type='flameheight')
+        save_points(test,points,num_points,'flame_height')
+    else:
+        p = np.loadtxt(pfilepath,unpack=True)
+        points = []
+        for i in range(int(len(p)/2)):
+            points.append([p[i*2],p[i*2+1]])
+        num_points = len(points)
+    datum,values = points[0],[]
+    for i in range(num_points-1):
+        values.append(points[i+1])
+    slope01 = (values[0][1]-values[1][1])/(values[0][0]-values[1][0])
+    b01 = values[0][1]-slope01*values[0][0]
+    values[0] = [0,b01]
+    slope02 = (values[-1][1]-values[-2][1])/(values[-1][0]-values[-2][0])
+    b02 = values[-1][1]-slope02*values[-1][0]
+    num_cols = heatmap.shape[1]
+    values[-1] = [num_cols,slope02*num_cols+b02]
+    xvals,yvals = [],[]
+    for i in range(len(values)):
+        xvals.append(values[i][0])
+        yvals.append(values[i][1])
+    return datum,xvals,yvals
+
 def find_flame_height(test,args):
     fname = os.getcwd().replace('wfire','') + test.filename
     threshold = get_threshold(test,test.fmc,tag='other')
@@ -1897,12 +1942,12 @@ def find_flame_height(test,args):
     row_heights = []
 
     heatmap = load_heatmap(test,args[1])
-
-    input('Select two points. First point, bottom datum. Second point, upper check')
-    points = get_points(heatmap,test,points_type='flameheight')[0]
-    yvals = [points[0][1],points[1][1]]
-    datum = round(yvals[0])
-    end_row = int(round(yvals[1]))
+    datum,xvals,yvals = load_flameheight_points(test,heatmap)
+    plt.plot(xvals,yvals)
+    plt.imshow(heatmap,cmap=args[0])
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+    lines_row = min(yvals)
+    end_row = max(yvals)
 
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
@@ -1938,6 +1983,6 @@ def find_flame_height(test,args):
                 input()
                 return
                 
-    row = datum-avg_flame_height
+    row = avg_flame_height
     heatmap[row] = heatmap.max()
     displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r')

@@ -14,6 +14,7 @@ def run_heatmap(sets,data,cmap):
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------','\n')
         print(' Generate heatmap ------------------------ g')
+        print(' Generate heatmap for flaming period ----- f')
         print(' Display heatmap ------------------------- d')
         print(' Generate pre-ignition heatmap ----------- p')
         print(' Generate ignition heatmap --------------- i')
@@ -26,6 +27,8 @@ def run_heatmap(sets,data,cmap):
         usr = input('Selected option: ')
         if usr == 'g':
             heat_maps = rn.run_heatmap_g(sets,data,'all')
+        elif usr == 'f':
+            rn.run_heatmap_g(sets,data,'flaming')
         elif usr == 'd':
             rn.run_heatmap_d(sets,heat_maps,data,cmap)
         elif usr == 'p':
