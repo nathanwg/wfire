@@ -465,7 +465,7 @@ def get_points(img,test,points_type):
         rows,cols = img.shape[0],img.shape[1]
         p = refine_gridpoints(p,rows,cols)
     else:
-        p = plt.ginput(num_points)
+        p = plt.ginput(num_points,timeout=-1)
         num_points = len(p)
         print(num_points)
     plt.close()
@@ -1947,7 +1947,7 @@ def find_flame_height(test,args):
     plt.imshow(heatmap,cmap=args[0])
     show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     lines_row = min(yvals)
-    end_row = max(yvals)
+    end_row = int(max(yvals))
 
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
@@ -1970,12 +1970,10 @@ def find_flame_height(test,args):
             if i <= current_row:
                 count+=1
         percentage = round(count/flaming_frames,1)
-        print(percentage)
         if percentage >= 0.5:
             avg_flame_height = current_row
             running = False
             print('Current_row: ',current_row,'\nEnd_row: ',end_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
-            input()
         else:
             current_row+=1
             if current_row >= end_row:
@@ -1985,4 +1983,10 @@ def find_flame_height(test,args):
                 
     row = avg_flame_height
     heatmap[row] = heatmap.max()
+    heatmap[int(datum[0])] = heatmap.max()
+    heatmap[end_row] = 0
+    spatial_calib = test.spatial_calibration*100 # multiplying by 100 makes it cm/pix
+    avg_flame_height = (datum[0]-avg_flame_height)*spatial_calib
+    print(round(avg_flame_height,2),' cm')
+    input()
     displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r')
