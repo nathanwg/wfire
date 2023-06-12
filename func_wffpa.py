@@ -1924,11 +1924,15 @@ def load_flameheight_points(test,heatmap):
         values.append(points[i+1])
     slope01 = (values[0][1]-values[1][1])/(values[0][0]-values[1][0])
     b01 = values[0][1]-slope01*values[0][0]
+    if b01 > datum[1]:
+        b01 = datum[1]
     values[0] = [0,b01]
     slope02 = (values[-1][1]-values[-2][1])/(values[-1][0]-values[-2][0])
     b02 = values[-1][1]-slope02*values[-1][0]
     num_cols = heatmap.shape[1]
     values[-1] = [num_cols,slope02*num_cols+b02]
+    if values[-1][1] > datum[1]:
+        values[-1][1] = datum[1]
     xvals,yvals = [],[]
     for i in range(len(values)):
         xvals.append(values[i][0])
@@ -1953,14 +1957,19 @@ def find_flame_height(test,args):
 
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
+        recorded = False
         for j in range(lines_bottom_row):
             if ref_frame[j].max() >= threshold:
-                recorded = False
                 roi = j # row of interest
                 if j < lines_peak_row:
-                    heatmap[j] = 0 ###
+                    # heatmap[j] = 0 ###
                     flaming_frames+=1
+                    if recorded:
+                        print('Recording more than one height for this frame #: ',i)
+                        input('Press \'Enter\', function will exit')
+                        return
                     row_heights.append(roi)
+                    recorded = True
                     break
                 elif j >= lines_peak_row:
                     for k in range(num_cols):
@@ -1979,14 +1988,14 @@ def find_flame_height(test,args):
                         if ycheck > yactual:
                             continue
                         else:
-                            # if recorded == False: 
                             flaming_frames+=1
                             row_heights.append(roi)
                             recorded = True
-                            # if heatmap[j,k] != heatmap.max():
-                            heatmap[j,k] = heatmap.max()
+                            # heatmap[j,k] = heatmap.max() ###
                             break
+                    break
     print('\nNumber of frames with flame detected: ',flaming_frames)
+    print('Flaming duration: ',test.eof-test.ignition_time[1])
     # input('Press enter')
     ######
     current_row = min(row_heights)
@@ -2002,19 +2011,19 @@ def find_flame_height(test,args):
         if percentage >= 0.5:
             avg_flame_height = current_row
             running = False
-            print('Current_row: ',current_row,'\nlines_bottom_row: ',lines_bottom_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
+            print('Row of average flame height: ',avg_flame_height,'\nRow representing the bottom of the lines, or bottom of flame zone: ',lines_bottom_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
         else:
             current_row+=1
             if current_row >= lines_bottom_row:
+                print('Error: The row being checked for average flame height has now reached the bottom of the upper flame zone defined by user selected points.')
                 print('Current_row: ',current_row,'\nlines_bottom_row: ',lines_bottom_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
-                input()
+                input('Hit \'Enter\' to return')
                 return
                 
-    row = avg_flame_height
-    heatmap[row] = heatmap.max()
-    heatmap[int(datum[0])] = heatmap.max()
-    heatmap[lines_peak_row] = 0
+    heatmap[avg_flame_height] = heatmap.max()
+    heatmap[int(datum[1])] = heatmap.max()
+    heatmap[lines_peak_row] = heatmap.max()
     spatial_calib = test.spatial_calibration*100 # multiplying by 100 makes it cm/pix
-    avg_flame_height = (datum[0]-avg_flame_height)*spatial_calib
+    avg_flame_height = (datum[1]-avg_flame_height)*spatial_calib
     print(round(avg_flame_height,2),' cm')
     displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
