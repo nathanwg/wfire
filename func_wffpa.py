@@ -397,7 +397,7 @@ def display_mapsets_c(test,cmap_usr):
     show_window(noticks=True,winmax=True,closewin=False,showwin=True)
     return True
 
-def displaymaps(heatmap,map_type,cmap_usr):
+def displaymaps(heatmap,map_type,cmap_usr,**kwargs):
     """...
     """
     if map_type != 'igloc':
@@ -416,6 +416,8 @@ def displaymaps(heatmap,map_type,cmap_usr):
     else:
         imgs = heatmap
     plt.figure()
+    if 'xvals' in kwargs:
+        plt.plot(kwargs['xvals'],kwargs['yvals'])
     plt.imshow(imgs,cmap=cmap_usr)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
@@ -1946,17 +1948,26 @@ def find_flame_height(test,args):
     plt.plot(xvals,yvals)
     plt.imshow(heatmap,cmap=args[0])
     show_window(noticks=False,winmax=False,closewin=True,showwin=True)
-    lines_row = min(yvals)
-    end_row = int(max(yvals))
+    lines_peak_row = int(min(yvals))
+    lines_bottom_row = int(max(yvals))
 
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
-        for j in range(end_row):
+        for j in range(lines_bottom_row):
             if ref_frame[j].max() >= threshold:
-                top_row = j
-                flaming_frames+=1
-                row_heights.append(top_row)
-                break
+                roi = j # row of interest
+                if j < lines_peak_row:
+                    heatmap[j] = 0
+                    flaming_frames+=1
+                    row_heights.append(roi)
+                    break
+                elif j >= lines_peak_row:
+                    for k in num_cols:
+                        pix = ref_frame[j,k]
+                        if pix < threshold:
+                            continue
+                        for ii in range(len(xvals)):
+                            if k > xvals
     print('\nNumber of frames with flame detected: ',flaming_frames)
     # input('Press enter')
     ######
@@ -1973,20 +1984,21 @@ def find_flame_height(test,args):
         if percentage >= 0.5:
             avg_flame_height = current_row
             running = False
-            print('Current_row: ',current_row,'\nEnd_row: ',end_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
+            print('Current_row: ',current_row,'\nlines_bottom_row: ',lines_bottom_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
         else:
             current_row+=1
-            if current_row >= end_row:
-                print('Current_row: ',current_row,'\nEnd_row: ',end_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
+            if current_row >= lines_bottom_row:
+                print('Current_row: ',current_row,'\nlines_bottom_row: ',lines_bottom_row,'\nPercentage: ',percentage,'\nPrevious percentage: ',old_percentage)
                 input()
                 return
                 
     row = avg_flame_height
     heatmap[row] = heatmap.max()
     heatmap[int(datum[0])] = heatmap.max()
-    heatmap[end_row] = 0
+    heatmap[lines_peak_row] = 0
     spatial_calib = test.spatial_calibration*100 # multiplying by 100 makes it cm/pix
     avg_flame_height = (datum[0]-avg_flame_height)*spatial_calib
     print(round(avg_flame_height,2),' cm')
     input()
-    displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r')
+    plt.plot(xvals,yvals)
+    displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
