@@ -1955,19 +1955,37 @@ def find_flame_height(test,args):
         ref_frame = frames[i].astype(float)
         for j in range(lines_bottom_row):
             if ref_frame[j].max() >= threshold:
+                recorded = False
                 roi = j # row of interest
                 if j < lines_peak_row:
-                    heatmap[j] = 0
+                    heatmap[j] = 0 ###
                     flaming_frames+=1
                     row_heights.append(roi)
                     break
                 elif j >= lines_peak_row:
-                    for k in num_cols:
+                    for k in range(num_cols):
                         pix = ref_frame[j,k]
                         if pix < threshold:
                             continue
                         for ii in range(len(xvals)):
-                            if k > xvals
+                            if k > xvals[ii] and k < xvals[ii+1]:
+                                x1,y1 = xvals[ii],yvals[ii]
+                                x2,y2 = xvals[ii+1],yvals[ii+1]
+                                break
+                        m = (y2-y1)/(x2-x1)
+                        b = y2-m*x2
+                        xcheck,ycheck = k,j
+                        yactual = m*xcheck+b
+                        if ycheck > yactual:
+                            continue
+                        else:
+                            # if recorded == False: 
+                            flaming_frames+=1
+                            row_heights.append(roi)
+                            recorded = True
+                            # if heatmap[j,k] != heatmap.max():
+                            heatmap[j,k] = heatmap.max()
+                            break
     print('\nNumber of frames with flame detected: ',flaming_frames)
     # input('Press enter')
     ######
@@ -1999,6 +2017,4 @@ def find_flame_height(test,args):
     spatial_calib = test.spatial_calibration*100 # multiplying by 100 makes it cm/pix
     avg_flame_height = (datum[0]-avg_flame_height)*spatial_calib
     print(round(avg_flame_height,2),' cm')
-    input()
-    plt.plot(xvals,yvals)
     displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
