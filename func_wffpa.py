@@ -724,7 +724,7 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
             num_cols = heatmap.shape[1]
             line = np.zeros((1,num_cols))
             coordinates = get_line_coordinates(test,distance)
-            if coordinates is 0:
+            if coordinates == 0:
                 return
             y_c,x_L,dx = coordinates[0,0],coordinates[0,1],coordinates[0,2]
             check = False
@@ -748,10 +748,10 @@ def plotprofiles_h(sets,data,distance,isnorm,ylim):
         line_avg /= num
         line_avg_norm /= num
         x_plot = np.linspace(0,9,num_cols)
-        if isnorm is True:
+        if isnorm == True:
             plt.plot(x_plot,line_avg_norm.T,label=labels[int(i/2)])
             axlabel = 's/s'
-        elif isnorm is False:
+        elif isnorm == False:
             plt.plot(x_plot,line_avg.T/500,label=labels[int(i/2)])
             axlabel = 't (s)'
     print(distance[0],' cm')
@@ -1940,6 +1940,13 @@ def load_flameheight_points(test,heatmap):
     return datum,xvals,yvals
 
 def find_flame_height(test,args):
+    heatmap = load_heatmap(test,args[1])
+    datum,xvals,yvals = load_flameheight_points(test,heatmap)
+
+    # plt.plot(xvals,yvals)
+    # plt.imshow(heatmap,cmap=args[0])
+    # show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+
     fname = os.getcwd().replace('wfire','') + test.filename
     threshold = get_threshold(test,test.fmc,tag='other')
     numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
@@ -1947,17 +1954,12 @@ def find_flame_height(test,args):
     flaming_frames = 0
     row_heights = []
 
-    heatmap = load_heatmap(test,args[1])
-    datum,xvals,yvals = load_flameheight_points(test,heatmap)
-    plt.plot(xvals,yvals)
-    plt.imshow(heatmap,cmap=args[0])
-    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     lines_peak_row = int(min(yvals))
     lines_bottom_row = int(max(yvals))
-
+    k_vals = []
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
-        recorded = False
+        recorded,change = False,False
         for j in range(lines_bottom_row):
             if ref_frame[j].max() >= threshold:
                 roi = j # row of interest
@@ -1973,14 +1975,26 @@ def find_flame_height(test,args):
                     break
                 elif j >= lines_peak_row:
                     for k in range(num_cols):
+                        k_vals.append(k)
                         pix = ref_frame[j,k]
                         if pix < threshold:
                             continue
                         for ii in range(len(xvals)):
-                            if k > xvals[ii] and k < xvals[ii+1]:
+                            if ii != len(xvals)-1:
+                                if xvals[ii] == xvals[ii+1]:
+                                    xvals[ii+1]*=1.01
+                                    change = True
+                            if k >= xvals[ii] and k <= xvals[ii+1]:
                                 x1,y1 = xvals[ii],yvals[ii]
                                 x2,y2 = xvals[ii+1],yvals[ii+1]
+                                if change:
+                                    change = False
+                                    xvals[ii+1]/=1.01
                                 break
+                            else:
+                                if change:
+                                    change = False
+                                    xvals[ii+1]/=1.01
                         m = (y2-y1)/(x2-x1)
                         b = y2-m*x2
                         xcheck,ycheck = k,j
@@ -1996,6 +2010,13 @@ def find_flame_height(test,args):
                     break
     print('\nNumber of frames with flame detected: ',flaming_frames)
     print('Flaming duration: ',test.eof-test.ignition_time[1])
+    duration = test.eof - test.ignition_time[1]
+    if flaming_frames > duration:
+        print('Test number: ',test.testnumber)
+        print('ERROR, flaming in this function is detected longer than flaming duration. Need to redo points selection')
+        usr = input('Continue or return? (c/r)')
+        if usr == 'r':
+            return
     # input('Press enter')
     ######
     current_row = min(row_heights)
