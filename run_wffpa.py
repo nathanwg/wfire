@@ -176,6 +176,7 @@ def run_createplots(sets,data,distance,ylim,showunc):
     print(' Plot avg int of max flame areas - s')
     print(' Plot numpixels ------------------ n')
     print(' Plot flaming duration ----------- d')
+    print(' Plot average flame heights ------ h')
     print( 'Go back ------------------------- b')
     usr = input('Selected option: ')
     if usr == 'p':
@@ -205,6 +206,9 @@ def run_createplots(sets,data,distance,ylim,showunc):
         run_plotdur(sets,data,showunc)
     elif usr == 'b':
         return
+    elif usr == 'h':
+        heights = loop_handl(sets,data,'heights',None)        
+        wf.plot_height(sets,data,heights,showunc)
     else:
         input('Error (hit \'Enter\' to continue)')
 
@@ -516,6 +520,8 @@ def func_switch(test,tag,args):
         func_out = wf.burnout_display(test,cmap_usr=args[0])
     elif tag == 'flameheight':
         func_out = wf.find_flame_height(test,args)
+    elif tag == 'heights':
+        func_out = test.flame_height
     else:
         return func_out
     return func_out

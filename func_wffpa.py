@@ -25,10 +25,12 @@ def importdata(datafile='data.txt',namesfile='filenames.txt'):
     Loads data from txt files, uses data to create a list of Test objects
     and returns this list as a tuple
     """
-    month,day,year,testnum,set_,orientation,height,temp,fmc,time,frame,spatial,eof = np.loadtxt(datafile,unpack=True)
+    month,day,year,testnum,set_,orientation,height,temp,fmc,time,frame,spatial,eof,flame_height = np.loadtxt(datafile,unpack=True)
     filenames = np.loadtxt(namesfile,dtype=str)
     data = []
+    # print(len(filenames),len(set_))
     for i in range(0,len(filenames)):
+        # print(i)
         filename = filenames[i]+'.tif'
         if set_[i] == 0 or set_[i] == 1:
             stype = 'individual'
@@ -36,7 +38,7 @@ def importdata(datafile='data.txt',namesfile='filenames.txt'):
             stype = 'groups'
         else:
             stype = None
-        ig_test = Test(filename,(month[i],day[i],year[i]),testnum[i],(stype,orientation[i],height[i],temp[i]),fmc[i],(time[i],int(frame[i])),spatial[i],eof[i])
+        ig_test = Test(filename,(month[i],day[i],year[i]),testnum[i],(stype,orientation[i],height[i],temp[i]),fmc[i],(time[i],int(frame[i])),spatial[i],eof[i],flame_height[i])
         data.append(ig_test)
     return tuple(data)
 
@@ -1299,6 +1301,30 @@ def plot_igtime(sets,data,igtimes,showunc):
     plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
     plt.ylabel('Average ignition time (s)')
     # plt.title('Average ignition times')
+    plt.legend()
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+    return
+
+def plot_height(sets,data,heights,showunc):
+    """ Plots average flame heights for different sets of tests
+    """
+    labels,temperatures,linestyle = get_plotinfo(sets,data) 
+    heights_averages = []
+    plt.figure(figsize=[9,7.5],dpi=140)
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams.update({'font.size': 24})
+    plt.tight_layout()
+    for i in range(len(heights)):        
+        heights_averages.append(np.mean(heights[i]))
+        unc,cap = calc_uncertainty(heights[i],10),4
+        if showunc == False:
+            unc,cap = 0,0
+        plt.errorbar(temperatures[i],heights_averages[i],fmt=linestyle[i],yerr=unc,capsize=cap,label=labels[i])
+        print('\n',sets[2*i],sets[2*i+1])
+        print('Temperature: ',temperatures[i],'height: ',heights_averages[i])
+    plt.xlabel('Average exhaust gas temperature ($^{\circ}$C)')
+    plt.ylabel('Average flame height (cm)')
+    # plt.title('Av')
     plt.legend()
     show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
