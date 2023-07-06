@@ -1348,7 +1348,7 @@ def plot_dur(sets,data,dur,showunc):
     plt.ylabel('Average flaming duration (s)')
     # plt.title('Average flaming duration')
     plt.legend()
-    show_window(noticks=False,winmax=False,closewin=True)
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
 
 
