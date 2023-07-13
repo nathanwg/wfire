@@ -1351,6 +1351,15 @@ def plot_dur(sets,data,dur,showunc):
     show_window(noticks=False,winmax=False,closewin=True,showwin=True)
     return
 
+def plot_vars(sets,data,vars,var_tags,labels):
+    legend_labels,temperatures,linestyle = get_plotinfo(sets,data)
+    for i in range(0,len(vars[0])):
+        plt.plot(vars[0][i],vars[1][i],linestyle[i],label=legend_labels[i])
+    plt.xlabel(labels[0])
+    plt.ylabel(labels[1])
+    plt.legend()
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+
 
 def get_plotinfo(sets,data):
     """ This function gets plot info and returns

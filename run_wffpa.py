@@ -177,6 +177,7 @@ def run_createplots(sets,data,distance,ylim,showunc):
     print(' Plot numpixels ------------------ n')
     print(' Plot flaming duration ----------- d')
     print(' Plot average flame heights ------ h')
+    print(' Plot different variables -------- v')
     print( 'Go back ------------------------- b')
     usr = input('Selected option: ')
     if usr == 'p':
@@ -204,6 +205,8 @@ def run_createplots(sets,data,distance,ylim,showunc):
         loop_handl(sets,data,'numpixelsarea',args=[False])
     elif usr == 'd':
         run_plotdur(sets,data,showunc)
+    elif usr == 'v':
+        run_plotvars(sets,data,showunc)
     elif usr == 'b':
         return
     elif usr == 'h':
@@ -211,6 +214,64 @@ def run_createplots(sets,data,distance,ylim,showunc):
         wf.plot_height(sets,data,heights,showunc)
     else:
         input('Error (hit \'Enter\' to continue)')
+
+def run_plotvars(sets,data,showunc):
+    os.system('cls')
+    print('\n\n\n\n\n','--------------------------------------------------','\n')
+    print('Choose two different variables to compare to one another. The first variable will be plotted along the x-axis')
+    print(' Ignition time -------- i')
+    print(' Flame height --------- h')
+    print(' Flame duration ------- d')
+    print(' Max flame area ------- a')
+    print(' Go back -------------- b')
+    var_tags,vars,labels = [],[],[]
+    for i in range(2):
+        usr = input('Selected option: ')
+        if usr == 'b':
+            return
+        elif usr == 'i':
+            var_tags.append('igtimes')
+            labels.append('Ignition times (s)')
+        elif usr == 'h':
+            var_tags.append('heights')
+            labels.append('Average flame height (cm)')
+        elif usr == 'd':
+            var_tags.append('flamdur')
+            labels.append('Flame duration (s)')
+        elif usr == 'a':
+            var_tags.append('pltarea')
+            labels.append('Maximum flame area (cm$^2$)')
+        vars.append(loop_handl(sets,data,var_tags[i],args=None))
+        if var_tags[i] == 'igtimes' or var_tags[i] == 'flamdur':
+            for j in range(len(vars[i])):
+                for k in range(len(vars[i][j])):
+                    vars[i][j][k]/=500
+    if var_tags[0] == 'igtimes' or var_tags[1] == 'igtimes':
+        vars[0].pop(5)
+        vars[1].pop(5)
+        vars[0][5].pop(5)
+        vars[1][5].pop(5)
+        vars[0][5].pop(7)
+        vars[1][5].pop(7)
+    # print(vars[0])
+    # input()
+    pop_values = []
+    # for i in range(2):
+    #     if var_tags[i] == 'igtimes':
+    #         for j in range(len(vars[i])):
+    #             len_set = len(vars[i][j])
+    #             for k in range(len_set):
+    #                 if vars[i][j][k] >= 20:
+    #                     pop_values.append([i,j,k])
+    # for i in pop_values:
+    #     vars[0][i[1]].pop(i[2])
+    #     vars[1][i[1]].pop(i[2])
+                        
+
+    wf.plot_vars(sets,data,vars,var_tags,labels)
+
+    
+        
 
 def run_plotdur(sets,data,showunc):
     durations = loop_handl(sets,data,'flamdur',None)
