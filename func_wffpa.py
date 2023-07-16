@@ -1672,21 +1672,30 @@ def plot_numpixelsarea(test,showmax):
     if ischeck == False:
         return None
     numpixels = np.load(numpixels_filepath)
+    ignition_frame = test.ignition_time[1]
+    z_indices = np.where(numpixels[0:ignition_frame]==0)
+    if z_indices[0].shape[0] == 0:
+        last_z = 0
+    else:
+        last_z = z_indices[0][-1]
+    print(last_z)
+    last_z/=500
+    print(last_z)
     num_frames = len(numpixels)
     x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
     if showmax == False:
         x/=500
         xlabel = 'time (s)'
-
     pixel_length = test.spatial_calibration*100 # change from m to cm
     pixel_area = pixel_length**2
     areapixels = numpixels*pixel_area # cm^2
-
+    max_area = areapixels.max()
     plt.figure(figsize=[10,7],dpi=140)
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams.update({'font.size': 24})
     plt.tight_layout()
     plt.plot(x,areapixels,linewidth=0.5)
+    plt.plot([last_z,last_z],[0,max_area])
     plt.xlabel(xlabel)
     plt.ylabel('combustion area (cm$^2$)')
     title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
