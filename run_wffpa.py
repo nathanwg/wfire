@@ -202,7 +202,7 @@ def run_createplots(sets,data,distance,ylim,showunc):
     elif usr == 's':
         run_plot_ima(sets,data,showunc)
     elif usr == 'n':
-        loop_handl(sets,data,'numpixelsarea',args=[False])
+        loop_handl(sets,data,'numpixelsarea',args=[False,35])
     elif usr == 'd':
         run_plotdur(sets,data,showunc)
     elif usr == 'v':
@@ -485,6 +485,33 @@ def run_plot_ima(sets,data,showunc):
     ima_sets = loop_handl(sets,data,'pltima',None)
     wf.plot_ima(sets,data,ima_sets,showunc)
 
+def run_basicplots(sets,data,threshold):
+    frames_list = []
+    running,error = True,False
+    while running:
+        os.system('cls')
+        print('\n\n\n\n\n','--------------------------------------------------','\n')
+        print('Threshold value: ',threshold)
+        print('Type option from the following list and hit enter:')
+        print(' Create basic plot --------------- p')
+        print(' Change threshold ---------------- t')
+        print(' Go back ------------------------- b')
+        if error:
+            print('error - value is either too high or too low')
+            error = False
+        usr = input('Selected option: ')
+        if usr == 'p':
+            loop_handl(sets,data,'numpixelsarea',args=[False,threshold])
+        elif usr == 't':
+            threshold_new = int(input('Type new threshold: '))
+            if threshold_new <= 0 or threshold_new >= 255:
+                error = True
+            else:
+                threshold = threshold_new
+        elif usr == 'b':
+            running = False
+    return
+
 def loop_handl(sets,data,tag,args):
     nsets = len(sets)
     outputs = []
@@ -547,7 +574,7 @@ def func_switch(test,tag,args):
     elif tag == 'satpercent':
         func_out = wf.calc_saturate(test)
     elif tag == 'numpixelsarea':
-        func_out = wf.plot_numpixelsarea(test,showmax=args[0])
+        func_out = wf.plot_numpixelsarea(test,showmax=args[0],threshold=args[1])
     elif tag == 'selectarea':
         func_out = wf.selectarea(test)
     elif tag == 'print_igtimes':
@@ -601,12 +628,14 @@ def main():
     cmap_filepath = os.getcwd() + '_cache\\cmap.npy'
     cmap = str(np.load(cmap_filepath))
     running,error = True, False
+    threshold = 35
     while running is True:
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------')
         print('   ------------------Main Menu-------------------')
         print(' --------------------------------------------------','\n')
         print('Type option from the following list and hit enter:','\n')
+        print('  Create basic area plots -------- A')
         print('  Data Analysis Tools ------------ T')
         print('  Create Analysis Plots ---------- P')
         print('  Data Analysis Validation ------- V')
@@ -634,6 +663,8 @@ def main():
             ylim = float(ylim)
         elif usr_func == 'v' or usr_func == 'V':
             run_validate(sets,data,distance,cmap)
+        elif usr_func == 'A' or usr_func == 'a':
+            threshold = run_basicplots(sets,data,threshold)
         elif usr_func == 'q' or usr_func == 'Q':
             running = False
         else:

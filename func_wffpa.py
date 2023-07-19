@@ -1661,32 +1661,45 @@ def change_cmap(cmap):
     cmaps = ['viridis','twilight','turbo','CMRmap','flag','gist_stern_r','nipy_spectral_r','tab20','Set3','Greys','nipy_spectral','gist_earth_r']
     return cmaps[usr-1]
 
-def plot_numpixelsarea(test,showmax):
+def plot_numpixelsarea(test,showmax,threshold):
     usr = input('Continue? (b)')
     if usr == 'b':
         return 999
-    numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
-    areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
-    msg = 'You need to run \'Check frame number\' to generate this file'
-    ischeck = checkfile(numpixels_filepath,test,checktype=False,isinput=True)
-    if ischeck == False:
-        return None
-    numpixels = np.load(numpixels_filepath)
-    ignition_frame = test.ignition_time[1]
-    z_indices = np.where(numpixels[0:ignition_frame]==0)
-    if z_indices[0].shape[0] == 0:
-        last_z = 0
+    if threshold == 35:
+        numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
     else:
-        last_z = z_indices[0][-1]
-    print(last_z)
-    last_z/=500
-    print(last_z)
+        numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels_'+str(threshold)+'.npy')
+    areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
+    # msg = 'You need to run \'Check frame number\' to generate this file'
+    ischeck = checkfile(numpixels_filepath,test,checktype=False,isinput=False)
+    if ischeck == False:
+        print('No values have been saved for this file & threshold value. Loading frames......\n')
+        fname = os.getcwd().replace('wfire','') + test.filename
+        numpixels = func_wfipa.calc_numpixels(threshold,fname)[0]
+        usr = input('Would you like to save the data for this threshold value? (y/n)')
+        if usr == 'y':
+            np.save(numpixels_filepath,numpixels)
+    else:
+        numpixels = np.load(numpixels_filepath)
+    ignition_frame = test.ignition_time[1]
+    if ignition_frame != 0:
+        z_indices = np.where(numpixels[0:ignition_frame]==0)
+        if z_indices[0].shape[0] == 0:
+            last_z = 0
+        else:
+            last_z = z_indices[0][-1]
+        print(last_z)
+        last_z/=500
+        print(last_z)
     num_frames = len(numpixels)
     x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
     if showmax == False:
         x/=500
         xlabel = 'time (s)'
     pixel_length = test.spatial_calibration*100 # change from m to cm
+    if pixel_length == 0:
+        input('There is no spatial calibration for this test so the default value of 0.0004 m/pixel is being used (hit enter to continue)')
+        pixel_length = 0.0004*100
     pixel_area = pixel_length**2
     areapixels = numpixels*pixel_area # cm^2
     max_area = areapixels.max()
@@ -1695,7 +1708,8 @@ def plot_numpixelsarea(test,showmax):
     plt.rcParams.update({'font.size': 24})
     plt.tight_layout()
     plt.plot(x,areapixels,linewidth=0.5)
-    plt.plot([last_z,last_z],[0,max_area])
+    if ignition_frame != 0:
+        plt.plot([last_z,last_z],[0,max_area])
     plt.xlabel(xlabel)
     plt.ylabel('combustion area (cm$^2$)')
     title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
