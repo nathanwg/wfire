@@ -1689,27 +1689,31 @@ def plot_numpixelsarea(test,showmax,threshold):
         else:
             last_z = z_indices[0][-1]
         print(last_z)
-        last_z/=500
+        # last_z/=500
         print(last_z)
     num_frames = len(numpixels)
     x,xlabel = np.linspace(1,num_frames,num_frames),'frame number'
-    if showmax == False:
-        x/=500
-        xlabel = 'time (s)'
+    # if showmax == False:
+    #     x/=500
+    #     xlabel = 'time (s)'
     pixel_length = test.spatial_calibration*100 # change from m to cm
     if pixel_length == 0:
         input('There is no spatial calibration for this test so the default value of 0.0004 m/pixel is being used (hit enter to continue)')
         pixel_length = 0.0004*100
     pixel_area = pixel_length**2
     areapixels = numpixels*pixel_area # cm^2
+    areapixels_mod = areapixels[0:ignition_frame]
+    x_mod = x[0:ignition_frame]
     max_area = areapixels.max()
+    max_area = areapixels_mod.max()
     plt.figure(figsize=[10,7],dpi=140)
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams.update({'font.size': 24})
     plt.tight_layout()
-    plt.plot(x,areapixels,linewidth=0.5)
+    # plt.plot(x,areapixels,linewidth=0.5)
+    plt.plot(x_mod,areapixels_mod,linewidth=0.5)
     if ignition_frame != 0:
-        plt.plot([last_z,last_z],[0,max_area])
+        plt.plot([last_z,last_z],[0,max_area],':')
     plt.xlabel(xlabel)
     plt.ylabel('combustion area (cm$^2$)')
     title = 'Test number: '+str(test.testnumber)+'   file: '+test.filename
