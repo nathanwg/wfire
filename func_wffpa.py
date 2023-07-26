@@ -19,6 +19,7 @@ import matplotlib.patches as pat
 from pynput import keyboard
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import math
+import mplcursors as mpl
 
 def importdata(datafile='data.txt',namesfile='filenames.txt'):
     """
@@ -1676,7 +1677,10 @@ def plot_numpixelsarea(test,showmax,threshold):
         print('No values have been saved for this file & threshold value. Loading frames......\n')
         fname = os.getcwd().replace('wfire','') + test.filename
         numpixels = func_wfipa.calc_numpixels(threshold,fname)[0]
-        usr = input('Would you like to save the data for this threshold value? (y/n)')
+        if threshold == 35:
+            usr = 'y'
+        else:
+            usr = input('Would you like to save the data for this threshold value? (y/n)')
         if usr == 'y':
             np.save(numpixels_filepath,numpixels)
     else:
@@ -1705,13 +1709,13 @@ def plot_numpixelsarea(test,showmax,threshold):
     areapixels_mod = areapixels[0:ignition_frame]
     x_mod = x[0:ignition_frame]
     max_area = areapixels.max()
-    max_area = areapixels_mod.max()
+    # max_area = areapixels_mod.max()
     plt.figure(figsize=[10,7],dpi=140)
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams.update({'font.size': 24})
     plt.tight_layout()
-    # plt.plot(x,areapixels,linewidth=0.5)
-    plt.plot(x_mod,areapixels_mod,linewidth=0.5)
+    plt.plot(x,areapixels,linewidth=0.5)
+    # plt.plot(x_mod,areapixels_mod,linewidth=0.5)
     if ignition_frame != 0:
         plt.plot([last_z,last_z],[0,max_area],':')
     plt.xlabel(xlabel)
@@ -1725,7 +1729,8 @@ def plot_numpixelsarea(test,showmax,threshold):
         x_n = [frame_num_numpixels,frame_num_numpixels]
         plt.plot(x_c,y)
         plt.plot(x_n,y)
-    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+    mpl.cursor()
+    show_window(noticks=False,winmax=False,closewin=False,showwin=True)
     return
 
 def change_errbar(showunc):
