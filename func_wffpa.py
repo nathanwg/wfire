@@ -509,7 +509,7 @@ def change_tests():
 
 def choose_preset(sets):
     running = True
-    is_1,is_2,is_3,is_4,is_5,is_6=0,0,0,0,0,0
+    is_1,is_2,is_3,is_4,is_5,is_6,is_7=0,0,0,0,0,0,0
     while running:
         os.system('cls')
         print('\n\n\n\n\n','--------------------------------------------------','\n')
@@ -519,6 +519,7 @@ def choose_preset(sets):
         print('Multiple-Live (83mm): 4')
         print('Multiple-dried (65mm): 5')
         print('Multiple-dried (83mm): 6')
+        print('Multiple-subset py: 7')
         print('Selection finished: f')
         usr = input('Choose selection: ')
         if usr == '1':
@@ -557,6 +558,12 @@ def choose_preset(sets):
                 continue
             sets.append([369,378,379,388,389,398,399,408,409,418])
             is_6 = True
+        elif usr == '7':
+            if is_7:
+                input('This has already been selected, press enter to continue')
+                continue
+            sets.append([420,429,430,439,440,449])
+            is_7 = True
         elif usr == 'f':
             running = False
     sets_new = []
