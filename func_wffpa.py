@@ -123,6 +123,14 @@ def show_ignition(test):
     frames = img[1]
     show_frames(frames,test.ignition_time[1],test.eof)
 
+def get_quartermap(frames,num_rows,num_cols,thresh):
+    heatmap = np.zeros((num_rows,num_cols))
+    for j in frames:
+        j = j.astype(float)
+        arr = (j-thresh)>0
+        heatmap+=arr
+    return heatmap
+
 def get_heatmaps(test,save,thresh,map_type):
     """.....
     """
@@ -452,6 +460,9 @@ def get_points(img,test,points_type):
     elif points_type == 'flameheight':
         pfilepath = cwd + '_cache\\flame_height\\'+test.filename.replace('.tif','_flameheightpoints.npy')
         num_points = None
+    elif points_type == 'intermittancy':
+        pfilepath = cwd + '_cache\\points\\intermittancy\\'+test.filename.replace('.tif','_points_intermittancy.txt')
+        num_points = None
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
@@ -460,8 +471,9 @@ def get_points(img,test,points_type):
     calib[0,0] = 4500
     if points_type != 'selectarea':
         img_new = np.concatenate((img,calib),axis=1)
-    if points_type == 'selectarea' or points_type == 'flameheight':
-        plt.imshow(img,cmap='nipy_spectral_r')
+    if points_type == 'selectarea' or points_type == 'flameheight' or points_type == 'intermittancy':
+        # plt.imshow(img,cmap='nipy_spectral_r')
+        plt.imshow(img)
     else:
         plt.imshow(img_new)
     plt.get_current_fig_manager().window.showMaximized()
@@ -648,13 +660,15 @@ def save_points(test,p,num_points,points_type):
         pfilepath = cwd+'_cache\\points\\flame_height\\'+test.filename.replace('.tif','')+'_points_height.txt'
         # input('Error (press \'Enter\' to return)')
         # return
+    elif points_type == 'intermittancy':
+        pfilepath = cwd+'_cache\\points\\intermittancy\\'+test.filename.replace('.tif','')+'_points_intermittancy.txt'
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
     pfile = open(pfilepath,'x')
     if points_type == 'profile':
         pfile.write(str(p[0][0])+' '+str(p[0][1])+' '+str(p[1][0])+' '+str(p[1][1]))
-    elif points_type == 'timeline' or points_type == 'vert' or points_type == 'grid' or points_type == 'flame_height':
+    else:
         for i in range(num_points):
             for j in range(2):
                 pfile.write(str(p[i][j])+' ')
@@ -833,6 +847,157 @@ def plotprofiles_v(sets,data,isnorm,xlim):
 def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
     return ylim
+
+def get_intermittancy(test):
+    threshold = get_threshold(test,fmc=test.fmc,tag='other')
+    cwd = os.getcwd()
+    pfilepath = cwd+'_cache\\points\\intermittancy\\'+test.filename.replace('.tif','')+'_points_intermittancy.txt'
+    ischeck = checkfile(pfilepath,test,checktype=False,isinput=False)
+    ignition_frame = int(test.ignition_time[1])
+    eof = int(test.eof)
+    frame_span = eof-ignition_frame
+    file = os.getcwd().replace('wfire','') + test.filename
+    img,filename = readfile(file,True)
+    frames,num_frames,num_rows,num_cols = get_image_properties(img)
+
+    # heatmap = load_heatmap(test,map_type='all')
+    quart = round(frame_span/4)
+    heatmap = get_quartermap(frames[ignition_frame+quart*3:ignition_frame+frame_span],num_rows,num_cols,threshold)
+
+    if ischeck == False:
+        p,num_points = get_points(heatmap,test,points_type='intermittancy')
+        save_points(test,p,num_points,'intermittancy')
+        return
+    else:
+        p = np.loadtxt(pfilepath,unpack=True)
+        num_points = int(len(p)/2)
+    x_val,y_val = [],[]
+    x_above,y_above = [],[]
+    x_below,y_below = [],[]
+    for i in range(0,len(p),2):
+        x_val.append(int(p[i]))
+        y_val.append(int(p[i+1]))
+    mid_point = x_val[0],y_val[0]
+    for i in range(len(y_val)):
+        if y_val[i] <= mid_point[1]:
+            x_above.append(x_val[i])
+            y_above.append(y_val[i])
+        else:
+            x_below.append(x_val[i])
+            y_below.append(y_val[i])
+    top_row,bottom_row = min(y_val),max(y_val)
+
+    intermittancy = np.zeros((frame_span,2))
+    x_time = np.linspace(0,frame_span,frame_span)
+
+    for i in range(frame_span):
+        ref_frame = frames[i+ignition_frame].astype(float)
+        for j in range(0,mid_point[1]):
+            if j < top_row:
+                # heatmap[j,:] = heatmap.max()
+                if ref_frame[j].max() >= threshold:
+                    intermittancy[i][0] = True
+                    break
+                else:
+                    continue
+            elif j >= top_row and j < mid_point[1]:
+                for k in range(num_cols):
+                    pix = ref_frame[j,k]
+                    if pix < threshold:
+                        continue
+                    if k < min(x_above) or k > max(x_above):
+                        # heatmap[j,k] = heatmap.max()
+                        # continue
+                        intermittancy[i][0] = True
+                        break
+                    m,b = check_line(k,ref_frame,x_above,y_above)
+                    xcheck,ycheck = k,j
+                    yactual = m*xcheck+b
+                    heatmap[int(yactual),k] = heatmap.max()
+                    if ycheck > yactual:
+                        continue
+                    else:
+                        # heatmap[int(ycheck),k] = heatmap.max()
+                        intermittancy[i][0] = True
+                        break
+                break
+        for j in range(mid_point[1],num_rows):  
+            if j >= mid_point[1] and j < bottom_row:
+                for k in range(num_cols):
+                    pix = ref_frame[j,k]
+                    if pix < threshold:
+                        continue
+                    if k < min(x_below) or k > max(x_below):
+                        # heatmap[j,k] = heatmap.max()
+                        # continue
+                        intermittancy[i][1] = True
+                        break
+                    m,b = check_line(k,ref_frame,x_below,y_below)
+                    xcheck,ycheck = k,j
+                    yactual = m*xcheck+b
+                    # heatmap[int(yactual),k] = heatmap.max()
+                    if ycheck < yactual:
+                        continue
+                    else:
+                        # heatmap[int(ycheck),k] = heatmap.max()
+                        intermittancy[i][1] = True
+                        break
+                break
+            elif j >= bottom_row:
+                # heatmap[j,:] = heatmap.max()
+                if ref_frame[j].max() >= threshold:
+                    intermittancy[i][1] = True
+                    heatmap[j,:] = heatmap.max()
+                    break
+                else:
+                    continue
+    # plt.imshow(heatmap)            
+    # plt.show()
+    q1 = [intermittancy[0:quart,0],intermittancy[0:quart,1]]
+    q1_sum = [round(np.sum(q1[0])/quart,3),round(np.sum(q1[1])/quart,3)]
+    q2 = [intermittancy[quart:quart*2,0],intermittancy[quart:quart*2,1]]
+    q2_sum = [round(np.sum(q2[0])/quart,3),round(np.sum(q2[1])/quart,3)]
+    q3 = [intermittancy[quart*2:quart*3,0],intermittancy[quart*2:quart*3,1]]
+    q3_sum = [round(np.sum(q3[0])/quart,3),round(np.sum(q3[1])/quart,3)]
+    q4 = [intermittancy[quart*3:frame_span,0],intermittancy[quart*3:frame_span,1]]
+    q4_sum = [round(np.sum(q4[0])/quart,3),round(np.sum(q4[1])/quart,3)]
+    print(q1_sum,q2_sum,q3_sum,q4_sum)
+    print(frame_span,quart)
+    input('press enter')
+    plt.figure()
+    plt.plot(x_time,intermittancy[:,0])
+    show_window(noticks=False,winmax=False,closewin=False,showwin=True)
+    plt.figure()
+    plt.plot(x_time,intermittancy[:,1])
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+
+def check_line(k,ref_frame,xvals,yvals):
+    change = False
+    for ii in range(len(xvals)):
+        if ii != len(xvals)-1:
+            if xvals[ii] == xvals[ii+1]:
+                xvals[ii+1]*=1.01
+                change = True
+        if k >= xvals[ii] and k <= xvals[ii+1]:
+            x1,y1 = xvals[ii],yvals[ii]
+            x2,y2 = xvals[ii+1],yvals[ii+1]
+            if change:
+                change = False
+                xvals[ii+1]/=1.01
+            break
+        else:
+            if change:
+                change = False
+                xvals[ii+1]/=1.01
+    m = (y2-y1)/(x2-x1)
+    b = y2-m*x2
+    return m,b
+        # xcheck,ycheck = k,j
+        # yactual = m*xcheck+b
+        # if ycheck > yactual:
+        #     continue
+        # else:
+
 
 def get_flametimeline(test):        
     cwd = os.getcwd()
