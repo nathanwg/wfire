@@ -8,6 +8,7 @@ from cv2 import threshold
 import numpy as np
 import os
 from classes import Test
+from classes import Line
 from func_wfipa import readfile, get_image_properties
 import matplotlib.pyplot as plt
 import matplotlib
@@ -850,6 +851,40 @@ def change_ylim(ylim):
     ylim = input('Set ylim for plotting: ')
     return ylim
 
+def create_line(x_vals,y_vals,ind):
+    # print(x_vals,y_vals)
+    p1 = [x_vals[ind],y_vals[ind]]
+    p2 = [x_vals[ind+1],y_vals[ind+1]]
+    diff = p2[0]-p1[0]
+    if diff < 0:
+        line_type = 'backwards'
+    elif diff > 0:
+        line_type = 'forwards'
+    elif diff == 0:
+        p2[0]*=1.01
+        diff = p2[0]-p1[0]
+        line_type = 'forwards'
+    if abs(int(diff)) < 2:
+        diff = 2
+    xpoints,ypoints = np.array(()),np.array(())
+    m = (p2[1]-p1[1])/(p2[0]-p1[0])
+    b = p2[1]-m*p2[0]
+    for i in range(abs(int(diff))):
+        if line_type == 'forwards':
+            x = int(p1[0]+i)
+        elif line_type == 'backwards':
+            x = int(p1[0]-1)
+        y = int(m*x+b)
+        xpoints = np.append(xpoints,x)
+        ypoints = np.append(ypoints,y)
+    # print(p1,p2)
+    # print(diff)
+    # print(abs(int(diff)))
+    # print(xpoints,ypoints)
+    # input()
+    line = Line(p1,p2,line_type,xpoints,ypoints,m,b)
+    return line
+
 def get_intermittancy(test):
     threshold = get_threshold(test,fmc=test.fmc,tag='other')
     cwd = os.getcwd()
@@ -883,10 +918,12 @@ def get_intermittancy(test):
         x_above,y_above = [],[]
         x_below,y_below = [],[]
         for i in range(0,len(p),2):
-            x_val.append(int(p[i]))
-            y_val.append(int(p[i+1]))
-        mid_point = x_val[0],y_val[0]
+            x_val.append(p[i])
+            y_val.append(p[i+1])
+        mid_point = int(x_val[0]),int(y_val[0])
         for i in range(len(y_val)):
+            if i == 0:
+                continue
             if y_val[i] <= mid_point[1]:
                 x_above.append(x_val[i])
                 y_above.append(y_val[i])
@@ -895,6 +932,17 @@ def get_intermittancy(test):
                 y_below.append(y_val[i])
         top_row,bottom_row = min(y_val),max(y_val)
 
+        num_lines = [int(len(x_above)-1),int(len(x_below)-1)]
+        lines_above,lines_below = [],[]
+        for i in range(num_lines[0]):
+            line = create_line(x_above,y_above,i)
+            lines_above.append(line)
+        for i in range(num_lines[1]):
+            line = create_line(x_below,y_below,i)
+            lines_below.append(line)
+        # print(min(x_above),max(x_above))
+        # print(min(x_below),max(x_below))
+        # input()
 
         for i in range(quart):
             ref_frame = frames[ignition_frame+quart*ii+i].astype(float)
@@ -916,16 +964,23 @@ def get_intermittancy(test):
                             # continue
                             intermittancy[i][0][ii] = True
                             break
-                        m,b = check_line(k,ref_frame,x_above,y_above)
+                        m,b,line_type = check_line(k,ref_frame,x_above,y_above,lines_above)
                         xcheck,ycheck = k,j
                         yactual = m*xcheck+b
                         heatmap[int(yactual),k] = heatmap.max()
-                        if ycheck > yactual:
-                            continue
-                        else:
-                            # heatmap[int(ycheck),k] = heatmap.max()
-                            intermittancy[i][0][ii] = True
-                            break
+                        if line_type == 'forward':
+                            if ycheck > yactual:
+                                continue
+                            else:
+                                # heatmap[int(ycheck),k] = heatmap.max()
+                                intermittancy[i][0][ii] = True
+                                break
+                        elif line_type == 'backwards':
+                            if ycheck < yactual:
+                                continue
+                            else:
+                                intermittancy[i][0][ii] = True
+                                break
                     break
             for j in range(mid_point[1],num_rows):  
                 if j >= mid_point[1] and j < bottom_row:
@@ -938,7 +993,7 @@ def get_intermittancy(test):
                             # continue
                             intermittancy[i][1][ii] = True
                             break
-                        m,b = check_line(k,ref_frame,x_below,y_below)
+                        m,b,line_type = check_line(k,ref_frame,x_below,y_below,lines_below)
                         xcheck,ycheck = k,j
                         yactual = m*xcheck+b
                         # heatmap[int(yactual),k] = heatmap.max()
@@ -971,37 +1026,67 @@ def get_intermittancy(test):
         plt.plot(x_time,intermittancy[:,1,i])
         show_window(noticks=False,winmax=False,closewin=True,showwin=True)
 
-def check_line(k,ref_frame,xvals,yvals):
-    change = False
-    for ii in range(len(xvals)):
-        if ii != len(xvals)-1:
-            if xvals[ii] == xvals[ii+1]:
-                xvals[ii+1]*=1.01
-                change = True
-        # print(len(xvals),k,ii,ii+1)
-        # ref_frame[yvals[ii],xvals[ii]] = ref_frame.max()
-        # ref_frame[:,k] = ref_frame.max()
-        # plt.imshow(ref_frame)
-        # plt.show()
-        if k >= xvals[ii] and k <= xvals[ii+1]:
-            x1,y1 = xvals[ii],yvals[ii]
-            x2,y2 = xvals[ii+1],yvals[ii+1]
-            if change:
-                change = False
-                xvals[ii+1]/=1.01
-            break
-        else:
-            if change:
-                change = False
-                xvals[ii+1]/=1.01
-    m = (y2-y1)/(x2-x1)
-    b = y2-m*x2
-    return m,b
-        # xcheck,ycheck = k,j
-        # yactual = m*xcheck+b
-        # if ycheck > yactual:
-        #     continue
-        # else:
+def check_line(col,ref_frame,xvals,yvals,lines):
+    loi = []
+    for i in lines:
+        xpoints,ypoints = i.xpoints,i.ypoints
+        # print(xpoints,col)
+        num = np.where(xpoints==col)[0].shape[0]
+        if num != 0:
+            loi.append([i,xpoints,ypoints])
+    if len(loi) == 0:
+        for i in lines:
+            xpoints,ypoints = i.xpoints,i.ypoints
+            num01 = np.where(xpoints==col+1)[0].shape[0]
+            num02 = np.where(xpoints==col-1)[0].shape[0]
+            # print(num01,num02)
+            if num01 != 0 or num02 != 0:
+                loi.append([i,xpoints,ypoints])
+    dis = 9999
+    m = loi[0][0].m
+    b = loi[0][0].b
+    line_type = loi[0][0].line_type
+    for j in range(len(loi)):
+        xpoints,ypoints = loi[j][1],loi[j][2]
+        for k in range(len(xpoints)-1):
+            dis_new = np.sqrt((xpoints[k+1]-xpoints[k])**2+(ypoints[k+1]-ypoints[k])**2)
+            if dis_new < dis:
+                m = loi[j][0].m
+                b = loi[j][0].b
+                line_type = loi[j][0].line_type
+                dis = dis_new
+    return m,b,line_type
+
+    # change = False
+    # for ii in range(len(xvals)):
+    #     if ii != len(xvals)-1:
+    #         if xvals[ii] == xvals[ii+1]:
+    #             xvals[ii+1]*=1.01
+    #             change = True
+    #     # print(len(xvals),k,ii,ii+1)
+    #     # ref_frame[yvals[ii],xvals[ii]] = ref_frame.max()
+    #     # ref_frame[:,k] = ref_frame.max()
+    #     # plt.imshow(ref_frame)
+    #     # plt.show()
+    #     if k >= xvals[ii] and k <= xvals[ii+1]:
+    #         x1,y1 = xvals[ii],yvals[ii]
+    #         x2,y2 = xvals[ii+1],yvals[ii+1]
+    #         if change:
+    #             change = False
+    #             xvals[ii+1]/=1.01
+    #         break
+    #     else:
+    #         if change:
+    #             change = False
+    #             xvals[ii+1]/=1.01
+    # m = (y2-y1)/(x2-x1)
+    # b = y2-m*x2
+    # return m,b
+    #     # xcheck,ycheck = k,j
+    #     # yactual = m*xcheck+b
+    #     # if ycheck > yactual:
+    #     #     continue
+    #     # else:
 
 
 def get_flametimeline(test):        

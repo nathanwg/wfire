@@ -13,12 +13,13 @@ class Test:
         self.eof = eof
         self.flame_height = flame_height
 
-class AvgTest:
-    """ A class that creates a AvgTest object which contains all of data
-    parameters from an averaged group of ignition tests (i.e., a set of tests) 
-    """
-    def __init__(self,filenames,set_type,height,temperature,fmc,ignition_time,ignition_frame):
-        self.filenames = filenames # tuple containing all filenames that this particular averaged group is made up of
-        self.set_type = set_type
-        self.fmc = fmc
-        self.ignition_time = ignition_time
+class Line:
+    def __init__(self,p1,p2,line_type,xpoints,ypoints,m,b):
+        self.p1 = p1
+        self.p2 = p2
+        self.line_type = line_type
+        self.xpoints = xpoints
+        self.ypoints = ypoints
+        self.m = m
+        self.b = b
+
