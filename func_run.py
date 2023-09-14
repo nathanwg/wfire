@@ -11,13 +11,15 @@ def run_heatmap_g(sets,data,map_type):
     for i in range(0,len(sets),2):
         print(round(sets[i]),'-',round(sets[i+1]))
     save = True
-    usr = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b)')
+    usr = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b/other)')
     if usr == 'l':
         thresh = 35
     elif usr == 'b':
         return
     elif usr == 'o':
         thresh = 50
+    elif usr == 'other':
+        thresh = int(input('Input desired threshold value: '))
     else:
         print('Error')
     if map_type == 'getsets_d' or map_type == 'getsets_c':

@@ -187,11 +187,13 @@ def run_createplots(sets,data,distance,ylim,showunc):
     elif usr == 'i':
         run_plotigtime(sets,data,showunc)
     elif usr == 'a':
-        ans = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b)')
+        ans = input(' Is the fuel evaluated in these tests live or oven dried? (L/O/b/other)')
         if ans == 'l':
             threshold = 35
         elif ans == 'o':
             threshold = 50
+        elif ans == 'other':
+            threshold = int(input('Input desired threshold value: '))
         else:
             return
         wf.calc_avgint(sets,data,threshold)
@@ -513,7 +515,7 @@ def run_basicplots(sets,data,threshold):
                 threshold = threshold_new
         elif usr == 'b':
             running = False
-    return
+    return threshold
 
 def loop_handl(sets,data,tag,args):
     nsets = len(sets)

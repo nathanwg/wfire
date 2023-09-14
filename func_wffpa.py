@@ -203,8 +203,8 @@ def get_mapsets_d(test,thresh,save):
     print(test.testnumber)
     name = test.filename.replace('.tif','')
     cwd = os.getcwd()
-    # filepath_check = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets01.npy'
-    filepath_check = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets01.npy'
+    filepath_check = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets01.npy'
+    # filepath_check = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets01.npy'
     ischeck = checkfile(filepath_check,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -215,8 +215,8 @@ def get_mapsets_d(test,thresh,save):
     fps = 500
     item = 1
 #---------------------
-    # time_step = 0.1*fps
-    time_step = 0.42*fps
+    time_step = 0.1*fps
+    # time_step = 0.42*fps
     flame_step = 0
     for i in range(7):
         heatmap = np.zeros((num_rows,num_cols))
@@ -232,8 +232,8 @@ def get_mapsets_d(test,thresh,save):
             arr = (j-thresh)>0
             heatmap,flame_step = map_discrete(heatmap,arr,flame_step,spacer=5)
         if save is True:
-            # savepath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets0' + str(item) + '.npy'
-            savepath = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets0' + str(item) + '.npy'
+            savepath = cwd+'_cache\\heatmaps\\dsets\\' + name + '_dsets0' + str(item) + '.npy'
+            # savepath = cwd+'_cache\\heatmaps\\dsets2\\' + name + '_dsets0' + str(item) + '.npy'
             np.save(savepath,heatmap)
         item+=1
     return None
@@ -464,6 +464,9 @@ def get_points(img,test,points_type):
     elif points_type == 'intermittancy':
         pfilepath = cwd + '_cache\\points\\intermittancy\\'+test.filename.replace('.tif','_points_intermittancy.txt')
         num_points = None
+    elif points_type == 'crop':
+        pfilepath = cwd+'_cache\\points\\crop\\'+test.filename.replace('.tif','')+'_points_crop.txt'
+        num_points = None
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return 0,0,False
@@ -472,7 +475,7 @@ def get_points(img,test,points_type):
     calib[0,0] = 4500
     if points_type != 'selectarea':
         img_new = np.concatenate((img,calib),axis=1)
-    if points_type == 'selectarea' or points_type == 'flameheight' or points_type == 'intermittancy':
+    if points_type == 'selectarea' or points_type == 'flameheight' or points_type == 'intermittancy' or points_type == 'crop':
         # plt.imshow(img,cmap='nipy_spectral_r')
         plt.imshow(img)
     else:
@@ -665,6 +668,8 @@ def save_points(test,p,num_points,points_type,**kwargs):
         pfilepath = cwd+'_cache\\points\\intermittancy\\'+test.filename.replace('.tif','')+'_points_intermittancy.txt'
         if 'pathname' in kwargs:
             pfilepath = kwargs['pathname']
+    elif points_type == 'crop':
+        pfilepath = cwd+'_cache\\points\\crop\\'+test.filename.replace('.tif','')+'_points_crop.txt'
     ischeck = checkfile(pfilepath,test,checktype=True,isinput=True)
     if ischeck == False:
         return
@@ -1302,10 +1307,7 @@ def get_max_flame_area(test):
     img,filename = readfile(file,True)
     frames,num_frames,num_rows,num_cols = get_image_properties(img)
     fmc = test.fmc
-    if fmc == 0:
-        threshold = 50
-    else:
-        threshold = 35
+    threshold = get_threshold(test,test.fmc,'other')
 
     max_flame_area,m_frame = 0,0
     pixel_length = test.spatial_calibration
@@ -1395,8 +1397,10 @@ def get_threshold(test,fmc,tag):
     else:
         if fmc == 0:
             threshold = 50
-        else:
+        elif fmc > 0:
             threshold = 35
+        elif fmc < 0:
+            threshold = 100
     return threshold
 
 def get_ima(test):
@@ -1416,10 +1420,7 @@ def get_ima(test):
             return 999
         m_frame = np.load(mfilepath)
         fmc = test.fmc
-        if fmc == 0:
-            threshold = 50
-        else:
-            threshold = 35
+        threshold = get_threshold(test,fmc,'other')
 
     rows,cols = m_frame.shape[0],m_frame.shape[1]
     if rows != cols:
@@ -1489,10 +1490,7 @@ def load_areaframe(test):
     return frame
 
 def calc_saturate(test):
-    if test.fmc == 0:
-        threshold = 50
-    else:
-        threshold = 35
+    threshold = get_threshold(test,test.fmc,'other')
     frame = load_areaframe(test)
     if frame is None:
         return 999
@@ -1694,11 +1692,7 @@ def checkfile(filepath,test,checktype,isinput):
         return True
 
 def displayarea(test,cmap_usr):
-    show = True
-    if test.fmc == 0:
-        threshold = 50
-    else:
-        threshold = 35
+    threshold = get_threshold(test,test.fmc,'other')
     frame_num = load_area(test)[1]
     if frame_num is None:
         return 999
@@ -1791,10 +1785,7 @@ def on_press(key):
 
 def checkframenum(test,cmap_usr,isdisplay):
     frame_num_cropped = load_area(test)[1]
-    if test.fmc == 0:
-        threshold = 50
-    else:
-        threshold = 35
+    threshold = get_threshold(test,test.fmc,'other')
     numpixels_filepath = os.getcwd() + '_cache\\numpixels\\' + test.filename.replace('.tif','_numpixels.npy')
     areaframe_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\frames\\' + test.filename.replace('.tif','_areaframe_numpixels.npy')
     areavals_numpixels_filepath = os.getcwd() + '_cache\\flame_area\\vals_numpixels\\' + test.filename.replace('.tif','_areavals_numpixels.npy')
@@ -1859,10 +1850,7 @@ def comp_areavals(test,isprint):
     cols = int(num_cols/2)
     frame_01 = frame[0:num_rows,0:cols]
     frame_02 = frame[0:num_rows,cols:num_cols]
-    if test.fmc != 0:
-        threshold = 35
-    elif test.fmc == 0:
-        threshold = 50
+    threshold = get_threshold(test,test.fmc,'other')
     area_01 = calc_area(frame_01,None,threshold,test.spatial_calibration,'frame')
     area_02 = calc_area(frame_02,None,threshold,test.spatial_calibration,'frame')
     per_diff = np.abs((area_01-area_02)/area_01)*100
@@ -2275,6 +2263,41 @@ def load_flameheight_points(test,heatmap):
         yvals.append(values[i][1])
     return datum,xvals,yvals
 
+def get_crop(test,heatmap):
+    input('Select 4 points per region you want cropped out (cropped regions will be rectangles). First two points will determine width, second two poitns will determine height')
+    points,num_points = get_points(heatmap,test,points_type='crop')
+    save_points(test,points,num_points,points_type='crop')
+    return points,num_points
+
+def load_crop(test,heatmap,ischeck,pfilepath):
+    if ischeck == False:
+        points,num_points = get_crop(test,heatmap)
+        save_points(test,points,num_points,'crop')
+    else:
+        p = np.loadtxt(pfilepath,unpack=True)
+        points = []
+        for i in range(int(len(p)/2)):
+            points.append([p[i*2],p[i*2+1]])
+        num_points = len(points)
+    return points,num_points
+
+def create_mask(num_rows,num_cols,points,num_rec):
+    mask = np.zeros((num_rows,num_cols))+1
+    for i in range(num_rec):
+        w_vals = [points[i*4][0],points[i*4+1][0]]
+        h_vals = [points[i*4+2][1],points[i*4+3][1]]
+        top_row,bottom_row = int(min(h_vals)),int(max(h_vals))
+        left_col,right_col = int(min(w_vals)),int(max(w_vals))
+        if right_col > 0.9*num_cols:
+            right_col = num_cols
+        width,height = right_col-left_col,bottom_row-top_row
+        # print(width,height)
+        for j in range(height):
+            for k in range(width):
+                # print(j,k,'\n',left_col+k)
+                mask[top_row+j,left_col+k] = 0
+    return mask
+
 def find_flame_height(test,args):
     heatmap = load_heatmap(test,args[1])
     datum,xvals,yvals = load_flameheight_points(test,heatmap)
@@ -2283,6 +2306,7 @@ def find_flame_height(test,args):
     # plt.imshow(heatmap,cmap=args[0])
     # show_window(noticks=False,winmax=False,closewin=True,showwin=True)
 
+
     fname = os.getcwd().replace('wfire','') + test.filename
     threshold = get_threshold(test,test.fmc,tag='other')
     numpixels,num_frames,frames = func_wfipa.calc_numpixels(threshold,fname)
@@ -2290,11 +2314,26 @@ def find_flame_height(test,args):
     flaming_frames = 0
     row_heights = []
 
+    ans = input('Would you like to crop regions in the frame? (y/n)')
+    if ans == 'y':
+        cwd = os.getcwd()
+        pfilepath = cwd+'_cache\\points\\crop\\'+test.filename.replace('.tif','')+'_points_crop.txt'
+        ischeck = checkfile(pfilepath,test,False,False)
+        points,num_points = load_crop(test,heatmap,ischeck,pfilepath)
+        num_rec = int(num_points/4)
+        mask = create_mask(num_rows,num_cols,points,num_rec)
+
+    heatmap_crop = np.multiply(heatmap,mask)
+    plt.imshow(heatmap_crop,cmap=args[0])
+    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+
     lines_peak_row = int(min(yvals))
     lines_bottom_row = int(max(yvals))
     k_vals = []
     for i in range(num_frames):
         ref_frame = frames[i].astype(float)
+        if ans == 'y':
+            ref_frame = np.multiply(ref_frame,mask)
         recorded,change = False,False
         for j in range(lines_bottom_row):
             if ref_frame[j].max() >= threshold:
@@ -2377,10 +2416,10 @@ def find_flame_height(test,args):
                 input('Hit \'Enter\' to return')
                 return
                 
-    heatmap[avg_flame_height] = heatmap.max()
-    heatmap[int(datum[1])] = heatmap.max()
-    heatmap[lines_peak_row] = heatmap.max()
+    heatmap_crop[avg_flame_height] = heatmap.max()
+    heatmap_crop[int(datum[1])] = heatmap.max()
+    heatmap_crop[lines_peak_row] = heatmap.max()
     spatial_calib = test.spatial_calibration*100 # multiplying by 100 makes it cm/pix
     avg_flame_height = (datum[1]-avg_flame_height)*spatial_calib
     print(round(avg_flame_height,2),' cm')
-    displaymaps(heatmap,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
+    displaymaps(heatmap_crop,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
