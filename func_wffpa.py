@@ -2290,6 +2290,8 @@ def create_mask(num_rows,num_cols,points,num_rec):
         left_col,right_col = int(min(w_vals)),int(max(w_vals))
         if right_col > 0.9*num_cols:
             right_col = num_cols
+        if top_row < 15:
+            top_row = 0
         width,height = right_col-left_col,bottom_row-top_row
         # print(width,height)
         for j in range(height):
