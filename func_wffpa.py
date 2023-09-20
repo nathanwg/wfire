@@ -2272,7 +2272,6 @@ def get_crop(test,heatmap):
 def load_crop(test,heatmap,ischeck,pfilepath):
     if ischeck == False:
         points,num_points = get_crop(test,heatmap)
-        save_points(test,points,num_points,'crop')
     else:
         p = np.loadtxt(pfilepath,unpack=True)
         points = []
@@ -2327,7 +2326,7 @@ def find_flame_height(test,args):
 
     heatmap_crop = np.multiply(heatmap,mask)
     plt.imshow(heatmap_crop,cmap=args[0])
-    show_window(noticks=False,winmax=False,closewin=True,showwin=True)
+    show_window(noticks=True,winmax=True,closewin=True,showwin=True)
 
     lines_peak_row = int(min(yvals))
     lines_bottom_row = int(max(yvals))
@@ -2388,7 +2387,7 @@ def find_flame_height(test,args):
     print('\nNumber of frames with flame detected: ',flaming_frames)
     print('Flaming duration: ',test.eof-test.ignition_time[1])
     duration = test.eof - test.ignition_time[1]
-    if flaming_frames > duration:
+    if flaming_frames > duration+1:
         print('Test number: ',test.testnumber)
         print('ERROR, flaming in this function is detected longer than flaming duration. Need to redo points selection')
         usr = input('Continue or return? (c/r)')
@@ -2425,3 +2424,6 @@ def find_flame_height(test,args):
     avg_flame_height = (datum[1]-avg_flame_height)*spatial_calib
     print(round(avg_flame_height,2),' cm')
     displaymaps(heatmap_crop,'all',cmap_usr='nipy_spectral_r',xvals=xvals,yvals=yvals)
+    usr = input('Continue or go back? (enter/b)')
+    if usr == 'b':
+        return 999
